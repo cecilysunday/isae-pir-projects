@@ -2,21 +2,23 @@ clear,clc
 %--------------------------------------------------------------------------
 %STEP 1: LOAD MATLAB ENVIRONMENT
 
-addpath('./PTV_algorithm');
-addpath('./PTV_algorithm/1-acquisition');
-addpath('./PTV_algorithm/2-mask');
-addpath('./PTV_algorithm/3-detection');
-addpath('./PTV_algorithm/3-detection/sub_programs'); 
-addpath('./PTV_algorithm/4-tracking');
-addpath('./PTV_algorithm/5-exploitation');
-addpath('./PTV_algorithm/5-exploitation/interpolation');
-addpath('./PTV_algorithm/5-exploitation/data_tracking');
-addpath('./PTV_algorithm/5-exploitation/velocity');
-addpath('./PTV_algorithm/6-perspective_correction');
+addpath('matlab/Main');
+addpath('matlab/PTV_algorithm');
+addpath('matlab/PTV_algorithm/1-acquisition');
+addpath('matlab/PTV_algorithm/2-mask');
+addpath('matlab/PTV_algorithm/3-detection');
+addpath('matlab/PTV_algorithm/3-detection/sub_programs'); 
+addpath('matlab/PTV_algorithm/4-tracking');
+addpath('matlab/PTV_algorithm/5-exploitation');
+addpath('matlab/PTV_algorithm/5-exploitation/interpolation');
+addpath('matlab/PTV_algorithm/5-exploitation/data_tracking');
+addpath('matlab/PTV_algorithm/5-exploitation/velocity');
+addpath('matlab/PTV_algorithm/5-exploitation/laser_profil');
+addpath('matlab/PTV_algorithm/6-perspective_correction');
 %--------------------------------------------------------------------------
 %STEP 2: LOAD PARAMETERS FOR DETECTION AND TRACKING (modify the parameters 
 %in parameters.m)
-
+%%
 parameters_tracking;
 data_mask = [x0,y0,a,width,e]; %parameters used for building a mask
 data_mask2 = [x02,y02,a2,width2,e2]; %parameters used for building another mask
@@ -30,7 +32,7 @@ data_perspective = [fdivZ p_s];
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('data/nouveau_format/Final-65Hz/Rempli-65Hz'));
+set = imageSet(fullfile('matlab/data/nouveau_format/Final-65Hz/Rempli-65Hz'));
 %--------------------------------------------------------------------------
 %%
 %STEP 4: CREATION OF A MASK (go in parameters.m and set the mask parameters 
