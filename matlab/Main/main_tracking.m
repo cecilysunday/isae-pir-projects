@@ -1,6 +1,7 @@
 clear,clc
 %--------------------------------------------------------------------------
 %STEP 1: LOAD MATLAB ENVIRONMENT
+
 addpath('matlab/Main');
 addpath('matlab/PTV_algorithm');
 addpath('matlab/PTV_algorithm/1-acquisition');
@@ -12,6 +13,7 @@ addpath('matlab/PTV_algorithm/5-exploitation');
 addpath('matlab/PTV_algorithm/5-exploitation/interpolation');
 addpath('matlab/PTV_algorithm/5-exploitation/data_tracking');
 addpath('matlab/PTV_algorithm/5-exploitation/velocity');
+addpath('matlab/PTV_algorithm/5-exploitation/laser_profil');
 addpath('matlab/PTV_algorithm/6-perspective_correction');
 %--------------------------------------------------------------------------
 %STEP 2: LOAD PARAMETERS FOR DETECTION AND TRACKING (modify the parameters 
