@@ -25,7 +25,7 @@ s_tr4 = size(tr4);
 r_min = tr4(1,7);
 r_max = tr4(s_tr4(1),7);
 regions = [linspace(r_min, r_min + 100, NB_LAYER_IN_SB),linspace(r_min + 100, r_max, NB_LAYER_OUT_SB)];
-regions = [regions(1:NB_LAYER_IN_SB),regions(NB_LAYER_IN_SB+2:end)];
+regions = regions(1:NB_LAYER_IN_SB,
 Vel_reg = Vel_region_time(regions,tr4);
 %% 
 %STEP 3: DISPLAY VELOCITIES
@@ -34,8 +34,8 @@ R_LAYER_WIDE = 30;
 PICTURE_BAND = 150;
 %display_velocity(tr4,v_mean,PIXEL_SCALE);
 %display_velocity_in_time(tr3,PIXEL_SCALE,PICTURE_BAND,R_LAYER_WIDE);
-%display_Vel_region_time(Vel_reg);
-display_Vel_error_bars(Vel_reg);
+display_Vel_region_time(Vel_reg);
+%display_Vel_error_bars(Vel_reg);
 
 %STEP 4: CLEAR THE WORKSPACE PLEASE TWROW THE USELESS DATA/VARIABLES
 clear PIXEL_SCALE R_LAYER_WIDE PERCENT SKIPSTEP CENTERX CENTERY PICTURE_BAND TIMESTEP s_tr4
