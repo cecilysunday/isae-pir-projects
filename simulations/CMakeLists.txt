@@ -1,76 +1,26 @@
-#--------------------------------------------------------------
-# 
-# Example of CMake configuration file to build an external 
-# project depending on Chrono and on optional Chrono modules.
-# 
-# This minimal sample project can be used as a template for a
-# user project.  Modify sections 1, 2, and 3 below as appropriate.
-# 
-#--------------------------------------------------------------
- 
+#=============================================================================
+# CMake configuration file for Chrono-Validation Projects
+#=============================================================================
 
 cmake_minimum_required(VERSION 2.8)
 
-#--------------------------------------------------------------
-# === 1 === 
-# Modify the project name if you want: 
-#--------------------------------------------------------------
+project(ChronoTaylorCouette)
 
-project(my_project)
+# Set location of executable
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+#set(PROJECT_DATA_DIR ${PROJECT_BINARY_DIR}/bin)
 
-#--------------------------------------------------------------
-# === 2 ===
-# Find the Chrono package and any REQUIRED or OPTIONAL modules
-# by invoking the find_package function in CONFIG mode:
-#    find_package(Chrono
-#	              COMPONENTS req_module1 req_module1 ...
-#	              OPTIONAL opt_module1 opt_module2 ...
-#                 CONFIG)
-# The following Chrono modules can be requested (their names
-# are case insensitive): Cascade, Cosimulation, FEA, Irrlicht,
-# Matlab, Parallel, Postprocess, Python, Vehicle.
-# 
-# Note that you will have to set the variable Chrono_DIR to 
-# specify the location of the ChronoConfig.cmake script, if
-# it is not in its default install location.
-# Chrono_DIR can be either a Chrono build tree or a Chrono install tree.
-# 
-# The following variables are set and can be used further down:
-# CHRONO_FOUND
-#   set to true if Chrono and all required components were found
-# CHRONO_C_FLAGS
-# CHRONO_CXX_FLAGS
-#   C and C++ compilation flags
-# CHRONO_INCLUDE_DIRS
-#   additional paths for included headers
-# CHRONO_LIBRARIES
-#   list of required libraries (with full path)
-# CHRONO_LINKER_FLAGS
-#   additional linker flags
-# CHRONO_DLLS
-#   list of all DLL dependencies (with full path)
-# CHRONO_DATA_DIR
-#   path to the Chrono data make_directory
-# 
-# In addition, for each requested component [COMPONENT], the
-# following variable is set to true (ON) or false (OFF):
-# CHRONO_[COMPONENT]_FOUND
-# 
-# In this example, we only request the Irrlicht module (required)
-#--------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# Disable some warnings
+#-----------------------------------------------------------------------------
 
-LIST(APPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/../Chrono/lib")
-find_package(Chrono
-             COMPONENTS Irrlicht
-             CONFIG)
-
-#--------------------------------------------------------------
-# Return now if Chrono or a required component was not found.
-#--------------------------------------------------------------
-
-if (NOT Chrono_FOUND)
-  message("Could not find Chrono or one of its required modules")
-  return()
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    if(MSVC)
+        add_definitions( "-D_CRT_SECURE_NO_DEPRECATE" )  # avoids deprecation warnings
+        add_definitions( "-D_SCL_SECURE_NO_DEPRECATE" )  # avoids deprecation warnings
+        add_definitions( "-DNOMINMAX" ) # do not use MSVC's min/max macros
+        add_definitions( "-MP" ) # perform parallel builds
+    endif(MSVC)
 endif()
 
 #--------------------------------------------------------------
@@ -90,63 +40,85 @@ if(APPLE)
     set(CMAKE_MACOSX_BUNDLE ON)
 endif()
 
+#-----------------------------------------------------------------------------
+# Invoke CMake in subdirectories
+#-----------------------------------------------------------------------------
+
+LIST(APPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/../Chrono/lib")
+find_package(Chrono
+             COMPONENTS Irrlicht Parallel Postprocess
+             CONFIG)
+
 #--------------------------------------------------------------
-# Add path to Chrono headers and to headers of all dependencies
-# of the requested modules.
+# Return now if Chrono or a required component was not found.
 #--------------------------------------------------------------
 
-include_directories(${CHRONO_INCLUDE_DIRS})
-
-#--------------------------------------------------------------
-# Tweaks to disable some warnings with MSVC
-#--------------------------------------------------------------
-if(MSVC)
-    add_definitions("-D_CRT_SECURE_NO_DEPRECATE")  # avoids deprecation warnings
-    add_definitions("-D_SCL_SECURE_NO_DEPRECATE")  # avoids deprecation warnings
-    add_definitions( "-DNOMINMAX" )                # do not use MSVC's min/max macros
-    set(EXTRA_COMPILE_FLAGS "/wd4275")             # disable warnings triggered by Irrlicht
-else()
-    set(EXTRA_COMPILE_FLAGS "")
+if (NOT Chrono_FOUND)
+  message("Could not find Chrono or one of its required modules")
+  return()
 endif()
 
 #--------------------------------------------------------------
-# === 3 ===
-# Add the executable from your project and specify all C++ 
-# files in your project. 
+# Set output data path. Return now if directory does not exist.
 #--------------------------------------------------------------
+set(PROJECT_DATA_DIR "" CACHE PATH "Path to data output directory")
 
-add_executable(myexe my_example.cpp)
-
-#--------------------------------------------------------------
-# Set properties for your executable target
-# 
-# Note that here we define a macro CHRONO_DATA_DIR which will
-# contain the path to the Chrono data directory, either in its
-# source tree (if using a build version of Chrono), or in its
-# install tree (if using an installed version of Chrono).
-#--------------------------------------------------------------
-
-set_target_properties(myexe PROPERTIES 
-	    COMPILE_FLAGS "${CHRONO_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}"
-	    COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
-	    LINK_FLAGS "${CHRONO_LINKER_FLAGS}")
+if(NOT PROJECT_DATA_DIR)
+  message(SEND_ERROR "Could not find PROJECT_DATA_DIR")
+endif()
 
 #--------------------------------------------------------------
-# Link to Chrono libraries and dependency libraries
+# Add subdirectories
 #--------------------------------------------------------------
 
-target_link_libraries(myexe ${CHRONO_LIBRARIES})
+#add_subdirectory(shared)
 
-#--------------------------------------------------------------
-# === 4 (OPTIONAL) ===
-# 
-# Optionally, add a custom command for copying all Chrono and
-# dependency DLLs to the appropriate binary output folder.
-# This function has effect only on Windows.
-# 
-# Note that you must first set EXECUTABLE_OUTPUT_PATH
-# (this can simply be ${CMAKE_BINARY_DIR}, like in this example)
-#--------------------------------------------------------------
+# Options for configuring/building individual sets of programs
+#option(ENABLE_TEMPLATES "Build validation programs templates" OFF)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+# Propagate configuration to submodules.
+#if(ENABLE_TEMPLATES)
+#  message(STATUS "==== Validation program templates ====")
+#  add_subdirectory(templates)
+#endif()
+
+
+#=============================================================================
+#
+# CMake configuration file for the main ChronoTaylorCouette library.
+#
+#=============================================================================
+
+message(STATUS "==== Chrono Validation Testing - Taylor Couette ====")
+
+#-----------------------------------------------------------------------------
+# Collect files in the main ChronoTaylorCouette library
+#-----------------------------------------------------------------------------
+
+set(TESTS
+    my_example
+    )
+
+
+#-----------------------------------------------------------------------------
+# Add the project executable
+#-----------------------------------------------------------------------------
+
+foreach(PROGRAM ${TESTS})
+
+	message(STATUS "...add ${PROGRAM}")
+	add_executable(${PROGRAM} "${PROGRAM}.cpp")
+	source_group("" FILES "${PROGRAM}.cpp")
+
+	set_target_properties(${PROGRAM} PROPERTIES
+   		COMPILE_FLAGS "${COMPILE_FLAGS}"
+    	COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"; SOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"; PROJECT_DATA_DIR=\"${PROJECT_DATA_DIR}\""
+    	LINK_FLAGS "${COMPILE_FLAGS} ${CHRONO_LINKER_FLAGS}"
+  	)
+
+	target_include_directories(${PROGRAM} PRIVATE ${CHRONO_INCLUDE_DIRS})
+	target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
+
+endforeach(PROGRAM)
+
 add_DLL_copy_command("${CHRONO_DLLS}")
