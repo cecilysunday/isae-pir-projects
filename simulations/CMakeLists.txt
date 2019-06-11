@@ -96,7 +96,8 @@ message(STATUS "==== Chrono Validation Testing - Taylor Couette ====")
 #-----------------------------------------------------------------------------
 
 set(TESTS
-    my_example
+    my_example 
+set_beads
     )
 
 
