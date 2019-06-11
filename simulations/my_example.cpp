@@ -56,7 +56,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	material->SetFriction(0.4f);
 	material->SetAdhesion(0);
 
-	auto body = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+	auto body = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 	
 	body->SetMass(mass);
 	body->SetPos(pos);
@@ -69,7 +69,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 		body->SetBodyFixed(false);
 	}
 	body->SetMaterialSurface(material);
-	//body->SetCollide(true);
+	body->SetCollide(true);
 
 
 	body->GetCollisionModel()->ClearModel();
@@ -299,12 +299,12 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 	printf("Test2\n");
 	// Add the rotating mixer
 
-	auto rotatingBody = std::make_shared<ChBody>(ChMaterialSurface::SMC); //FIXME
+	auto rotatingBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC); //FIXME
 
 	rotatingBody->SetMass(10.0);
 	rotatingBody->SetInertiaXX(ChVector<>(50, 50, 50));
 	rotatingBody->SetPos(ChVector<>(0, -1, 0));
-	//rotatingBody->SetCollide(true);
+	rotatingBody->SetCollide(true);
 	rotatingBody->SetMaterialSurface(material);
 
 	rotatingBody->GetCollisionModel()->ClearModel();
@@ -338,14 +338,14 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 	rotatingBody->AddAsset(mtexture);
 
 
-	//create_cylinder_ext(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list);
+	create_cylinder_ext(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list);
 
 
 
-	//create_cylinder_int(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list);
+	create_cylinder_int(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list);
 
 
-	//remplir(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list);
+	remplir(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list);
 
 	//printf("taille beads_list %i \n", p_beads_list->size());
 

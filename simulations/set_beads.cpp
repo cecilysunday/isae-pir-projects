@@ -56,7 +56,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	material->SetFriction(0.4f);
 	material->SetAdhesion(0);
 
-	auto body = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+	auto body = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(),ChMaterialSurface::SMC);
 	
 	body->SetMass(mass);
 	body->SetPos(pos);
@@ -69,7 +69,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 		body->SetBodyFixed(false);
 	}
 	body->SetMaterialSurface(material);
-	//body->SetCollide(true);
+	body->SetCollide(true);
 
 
 	body->GetCollisionModel()->ClearModel();
@@ -297,14 +297,40 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 	printf("Test1\n");
 	mphysicalSystem.AddBody(fixedBody);
 	printf("Test2\n");
+
+	//Create seiling
+	auto seiling = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+
+	seiling->SetMass(1.0);
+	seiling->SetBodyFixed(true);
+	seiling->SetPos(ChVector<>(0, height+r_bead, 0));
+	seiling->SetRot(Q_from_AngY(0.0));
+	seiling->SetCollide(true);
+	seiling->SetMaterialSurface(material);
+	seiling->GetCollisionModel()->ClearModel();
+	seiling->GetCollisionModel()->AddBox(r_cyl_ext, 1, r_cyl_ext, seiling->GetPos(), seiling->GetRot());
+	seiling->GetCollisionModel()->BuildModel();
+
+	auto box_seiling = std::make_shared<ChBoxShape>();
+	box_seiling->GetBoxGeometry().Size = ChVector<>(r_cyl_ext, 0.5, r_cyl_ext);
+	box_seiling->GetBoxGeometry().Pos = ChVector<>(0, 0, 0);
+	box_seiling->SetColor(ChColor(1, 0, 1));
+	box_seiling->SetFading(0.6f);
+	seiling->AddAsset(box_seiling);
+
+	
+	seiling->AddAsset(textcyl);
+	printf("Test1\n");
+	mphysicalSystem.AddBody(seiling);
+	printf("Test2\n");
 	// Add the rotating mixer
 
-	auto rotatingBody = std::make_shared<ChBody>(ChMaterialSurface::SMC); //FIXME
+	auto rotatingBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(),ChMaterialSurface::SMC); //FIXME
 
 	rotatingBody->SetMass(10.0);
 	rotatingBody->SetInertiaXX(ChVector<>(50, 50, 50));
 	rotatingBody->SetPos(ChVector<>(0, -1, 0));
-	//rotatingBody->SetCollide(true);
+	rotatingBody->SetCollide(true);
 	rotatingBody->SetMaterialSurface(material);
 
 	rotatingBody->GetCollisionModel()->ClearModel();
@@ -342,10 +368,10 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 
 
 
-	//create_cylinder_int(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list);
+	create_cylinder_int(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list);
 
 
-	//remplir(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list);
+	remplir(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list);
 
 	//printf("taille beads_list %i \n", p_beads_list->size());
 
@@ -460,7 +486,7 @@ int main(int argc, char* argv[]) {
 	double r_cyl_ext =10 ;
 	double r_cyl_int = 2;
 	double height = 10;
-	double height_bead = 10;
+	double height_bead = 8;
 	double mass = 1;
 	double rotation_speed = CH_C_PI / 2.0;
 	//Paramètres de simulation
