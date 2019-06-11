@@ -26,6 +26,7 @@ data_mask3 = [x03,y03,a3,width3,e3]; %parameters used for building another mask
 data = [blob_diam th sz sz2 brightn_tr]; %parameters used for detection
 data2 = [deltaT maxdisp mem good quiet]; %parameters used for tracking
 data_perspective = [fdivZ p_s];
+%%
 %--------------------------------------------------------------------------
 %STEP 3: LOAD IMAGES FROM AN INPUT VIDEO OR FROM A COLLECTION OF IMAGES
 
@@ -39,7 +40,7 @@ set = imageSet(fullfile('matlab/data/nouveau_format/Final-65Hz/Rempli-65Hz'));
 %to the desired values. Make sure the mask is OK by printing it with the     
 %mask function below)
 
-mask(set, data_mask);
+%mask(set, data_mask);
 %%
 %--------------------------------------------------------------------------
 %STEP 5: DETECTION OF PARTICLES (go in parameters.m and set the detection 
@@ -54,9 +55,14 @@ mask(set, data_mask);
 
 %Then test your mask !
 
-array2 = keep_shearing_band(detect_particles(set, 4, data,0), data_mask);
-%display_particles(set, 4, data, array2, 1,1);
-display_rg(set, 1, data, array2,1);
+array2 = keep_shearing_band(detect_particles(set, 1, data,0), data_mask);
+%display_particles(set, 1, data, array2, 1,1);
+%display_rg(set, 1, data, array2,1);
+
+array_filtered = filter_size_bright(array2, 10000, 'brightness');
+%array_filtered = filter_size_bright(array_filtered, 50, 'radius');
+%display_rg(set, 1, data, array_filtered,1);
+
 %test_sub_pixel_accuracy(array2, 20);
 %%
 %--------------------------------------------------------------------------
@@ -64,27 +70,26 @@ display_rg(set, 1, data, array2,1);
 %parameters to the desired values. Make sure the tracking is OK by 
 %tracking particles in your set of images and by printing all the 
 %trajectories computed, or by ploting the trajectories data with the 
-%function: get_data_tracking)
+%function: get_data_tracking
 
 %TRACKING:
 %tr = track_particles(set, data, data2, data_mask, 0); %track without mask
-tr = track_particles(set, data, data2, data_mask, 1); %track with mask
+%tr = track_particles(set, data, data2, data_mask, 1); %track with mask
 
 %Correcting perspective view
 %tr = [uv2XYZ(tr_0, data_perspective, set), tr_0(:,3:4)];
 
 %GET DATA TRACKING
-data_tracking = get_data_tracking(set, tr);
+
+%data_tracking = get_data_tracking(set, tr);
 %display_data_tracking(set, data_tracking);
-
-
-
 %%
 %TO DISPLAY ONLY ONE PARTICULAR COMPUTED TRACK:
-deltaT = 1;
-display_track_nb(set, tr, deltaT, 918);
+%deltaT = 1;
+%display_track_nb(set, tr, deltaT, 918);
+
 %TO DISPLAY ALL THE COMPUTED TRACKS AT THE SAME TIME:
-%display_tracks(set, tr_0, deltaT);
+%display_tracks(set, tr, deltaT);
 %%
 %TO DISPLAY ALL THE COMPUTED TRACKS ONE AFTER THE OTHER:
 % sz = size(tr);
@@ -104,4 +109,5 @@ clear data2 deltaT maxdisp mem good quiet
 clear data_perspective fdivZ p_s
 clear directory videoname 
 clear sz i
+clear brightness_threshold radius_threshold thresholds
 %--------------------------------------------------------------------------

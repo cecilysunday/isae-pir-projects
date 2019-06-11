@@ -7,13 +7,15 @@
 % treated/filtered image; otherwise set this value to 0
 %
 % This function plots the detected particles according to their gyroradius
-% (radius of the particle)
+% (radius of the particle) and their brightness
 %
 % OUTPUTs: 2 figures:
 %   -figure 1: image with the detected blobs, displayed according to their
 %   size (gyroradius)
 %   -figure 2: graph showing the detected blobs with a color code
 %   corresponding to their size (gyroradius)
+%   -figure 3: graph showing the detected blobs with a color code
+%   corresponding to their brightness 
 
 function display_rg(set, num, data, array, istreated)
 
@@ -36,8 +38,17 @@ for i=1:sz(1)
 end
 
 figure; 
+title('radius');
+hold on;
+axis ij equal;
+for i=1:sz(1)
+    scatter(array(i,1), array(i,2), array(i,4), array(i,4),'filled', 'LineWidth', 2);
+end
+
+figure; 
+title('brightness');
 hold on;
 axis ij equal;
 for i=1:sz(1) 
-    scatter(array(i,1), array(i,2), array(i,4),array(i,4),'filled', 'LineWidth', 2);
+    scatter(array(i,1), array(i,2), array(i,3)*10^-2, array(i,3),'filled', 'LineWidth', 2);
 end

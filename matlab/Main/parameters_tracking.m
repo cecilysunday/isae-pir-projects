@@ -12,7 +12,7 @@ y02 = 0;
 y03 = 0; 
 
 %e = eccentricity of the ellipses
-e = 0.2; 
+e = 0.25; 
 e2 = 0;
 e3 = 0; 
 
@@ -22,22 +22,23 @@ a2 = 0;
 a3 = 0;
  
 %width = width of the mask 
-width = 500;
+width = 600;
 width2 = 0; 
 width3 = 0;
 %--------------------------------------------------------------------------
 %PARAMETERS USED FOR THE DETECTION 
 
+%blob_diam
 %This parameter is used in the bpass function; see "detect_particles".
 %the diameter of the 'blob's you want to find in pixels.
-%blob_diam = 24;
-%blob_diam = 10;
+
+%th
 %This parameter is used in the pkfnd function; see "detect_particles".
 %The minimum brightness of a pixel that might be local maxima. 
 %(NOTE: Make it big and the code runs faste but you might miss some 
 %particles. Make it small and you'll get everything and it'll be slow)
-%th = 10;
-%th = 20;
+
+%sz
 %This parameter is used in the pkfnd function; see "detect_particles". 
 %Roughly the diameter of the average feature to look for in pixels. 
 %This parameter is helpful for noisy data.
@@ -46,8 +47,8 @@ width3 = 0;
 %of your blob. If multiple peaks are found withing a radius of sz/2 then 
 %the code will keep only the brightest. Also gets rid of all peaks within 
 %sz of boundary.
-%sz = blob_diam; %11
 
+%sz2
 %This parameter is used in the cntrd function; see "detect_particles".
 %Diamter of the window over which to average to calculate the centroid.  
 %Should be big enough to capture the whole particle but not so big that it 
@@ -55,19 +56,17 @@ width3 = 0;
 %If initial guess of center (from pkfnd) is far from the centroid, the
 %window will need to be larger than the particle size.  
 %The RECCOMMENDED size is the long lengthscale used in bpass plus 2.
-%sz2 = blob_diam + 3; %15, valeur impaire
 
+%brightn_tr
 %This parameter is used in "detect_particles".
 %Brightness_treshold : seuil de luminosité. Les points d'intérêt dont la 
 %luminosité est en dessous de ce seuil ne seront pas détectés. Les points 
 %d'intérêt dont la luminosité est au dessus de ce seuil seront détectés. 
 %Pour détecter beaucoup de particules sur une image, mettre la valeur à 0.
 %Pour détecter peu de particules, augmenter la valeur de ce paramètre
-%brightn_tr = 300;
-%brightn_tr = 400;
 
-blob_diam = 18;
-th = 20;%35
+blob_diam = 16;
+th = 16;
 sz = blob_diam; 
 sz2 = blob_diam + 3;
 brightn_tr = 300;
