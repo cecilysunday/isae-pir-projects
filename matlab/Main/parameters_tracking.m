@@ -66,8 +66,8 @@ width3 = 0;
 %brightn_tr = 300;
 %brightn_tr = 400;
 
-blob_diam = 18;
-th = 20;%35
+blob_diam = 4;
+th = 0;%35
 sz = blob_diam; 
 sz2 = blob_diam + 3;
 brightn_tr = 300;

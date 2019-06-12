@@ -27,35 +27,37 @@ data = [blob_diam th sz sz2 brightn_tr]; %parameters used for detection
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('data\final_test_laser'));
+set = imageSet(fullfile('matlab/data/final_test_laser'));
 %--------------------------------------------------------------------------
 %STEP 4: CREATION OF A MASK (Make sure the mask is OK by printing it with the     
 %script below)
 
 %parameters for the rectangular mask:
-x0 = 40; 
-y0 = 125; 
-long = 555; 
-larg = 200;
+x0 = 440; 
+y0 = 130; 
+long = 35; 
+larg = 152;
 
 data_mask = [x0 y0 long larg];
 
 %display the picture with your mask
-%display_picture(set, 1, data, 0);
-%rectangle('Position',[x0 y0 long larg],'EdgeColor','b', 'LineWidth', 2);
+display_picture(set, 1, data, 0);
+rectangle('Position',[x0 y0 long larg],'EdgeColor','b', 'LineWidth', 2);
 %--------------------------------------------------------------------------
+%%
 %STEP 5: DETECTION OF PARTICLES (go in parameters_tracking.m and set the detection 
 %parameters to the desired values. Make sure the detection is OK by 
 %detecting particles in the first image of the set and by printing all the 
 %detected particles in the image)
 
 %elimination of the particles wich are not under the mask
-%array = detect_particles(set, 1, data, 0);
-%array = check_rectangular_mask(data_mask, array);
+array = detect_particles(set, 1, data, 0);
+array = check_rectangular_mask(data_mask, array);
 
 %plot the image with all the detected particles under the rectangular mask
-%display_particles(set, 1, data, array, 1, 0); 
+display_particles(set, 1, data, array, 1, 0); 
 %--------------------------------------------------------------------------
+%%
 %STEP 6: build a profil, correct perspective effects and display it
 theta = 0.6435;
 [data_profil_proj,data_profil] = build_profil(set, data_mask, data, theta);
