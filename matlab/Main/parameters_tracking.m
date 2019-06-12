@@ -12,7 +12,7 @@ y02 = 0;
 y03 = 0; 
 
 %e = eccentricity of the ellipses
-e = 0.25; 
+e = 0.2; 
 e2 = 0;
 e3 = 0; 
 
@@ -22,7 +22,7 @@ a2 = 0;
 a3 = 0;
  
 %width = width of the mask 
-width = 600;
+width = 35;
 width2 = 0; 
 width3 = 0;
 %--------------------------------------------------------------------------
@@ -65,8 +65,8 @@ width3 = 0;
 %Pour détecter beaucoup de particules sur une image, mettre la valeur à 0.
 %Pour détecter peu de particules, augmenter la valeur de ce paramètre
 
-blob_diam = 16;
-th = 16;
+blob_diam = 18;
+th = 30;
 sz = blob_diam; 
 sz2 = blob_diam + 3;
 brightn_tr = 300;

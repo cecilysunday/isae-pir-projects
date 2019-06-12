@@ -2,16 +2,17 @@ clear, clc
 %--------------------------------------------------------------------------
 %STEP 1: LOAD MATLAB ENVIRONMENT
 
-addpath('./PTV_algorithm');
-addpath('./PTV_algorithm/1-acquisition');
-addpath('./PTV_algorithm/2-mask');
-addpath('./PTV_algorithm/3-detection');
-addpath('./PTV_algorithm/3-detection/sub_programs'); 
-addpath('./PTV_algorithm/4-tracking');
-addpath('./PTV_algorithm/5-exploitation/interpolation');
-addpath('./PTV_algorithm/5-exploitation/data_tracking');
-addpath('./PTV_algorithm/5-exploitation/velocity');
-addpath('./PTV_algorithm/5-exploitation/laser_profil');
+addpath('matlab/Main');
+addpath('matlab/PTV_algorithm');
+addpath('matlab/PTV_algorithm/1-acquisition');
+addpath('matlab/PTV_algorithm/2-mask');
+addpath('matlab/PTV_algorithm/3-detection');
+addpath('matlab/PTV_algorithm/3-detection/sub_programs'); 
+addpath('matlab/PTV_algorithm/4-tracking');
+addpath('matlab/PTV_algorithm/5-exploitation/interpolation');
+addpath('matlab/PTV_algorithm/5-exploitation/data_tracking');
+addpath('matlab/PTV_algorithm/5-exploitation/velocity');
+addpath('matlab/PTV_algorithm/5-exploitation/laser_profil');
 %--------------------------------------------------------------------------
 %STEP 2: LOAD PARAMETERS FOR DETECTION (modify the parameters 
 %in parameters_tracking.m)
@@ -24,7 +25,7 @@ data = [blob_diam th sz sz2 brightn_tr]; %parameters used for detection
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('data\final_test_laser'));
+set = imageSet(fullfile('matlab\data\final_test_laser'));
 %--------------------------------------------------------------------------
 %STEP 4: CREATION OF A MASK (Make sure the mask is OK by printing it with the     
 %script below)
@@ -47,20 +48,20 @@ data_mask = [x0 y0 long larg];
 %detected particles in the image)
 
 %elimination of the particles wich are not under the mask
-%array = detect_particles(set, 1, data, 0);
-%array = check_rectangular_mask(data_mask, array);
+array = detect_particles(set, 1, data, 0);
+array = check_rectangular_mask(data_mask, array);
 
 %plot the image with all the detected particles under the rectangular mask
-%display_particles(set, 1, data, array, 1, 0); 
+display_particles(set, 1, data, array, 1, 0); 
 %--------------------------------------------------------------------------
 %STEP 6: build a profil, correct perspective effects and display it
-theta = 0.6435;
-[data_profil_proj,data_profil] = build_profil(set, data_mask, data, theta);
+%theta = 0.6435;
+%[data_profil_proj,data_profil] = build_profil(set, data_mask, data, theta);
 %%
 %display_laser_profile(set, data_profil_proj, data_profil, data_mask, data, 0.5, set.Count/100);
 %display_laser_profile_in_time(set, data_profil_proj, data_mask,set.Count/10);
 %%
-get_GIF(set,data_profil_proj,data_mask,'radial_profile',set.Count/50);
+%get_GIF(set,data_profil_proj,data_mask,'radial_profile',set.Count/50);
 %%
 %--------------------------------------------------------------------------
 %STEP 7: CLEAR THE WORKSPACE PLEASE TWROW THE USELESS DATA/VARIABLES

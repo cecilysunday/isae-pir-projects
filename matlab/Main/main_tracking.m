@@ -31,7 +31,7 @@ data_perspective = [fdivZ p_s];
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('matlab/data/nouveau_format/Final-65Hz/Rempli-65Hz'));
+set = imageSet(fullfile('matlab/data/nouveau_format/Final-65Hz/Vide-65Hz'));
 %--------------------------------------------------------------------------
 %%
 %STEP 4: CREATION OF A MASK (go in parameters.m and set the mask parameters 
@@ -53,11 +53,11 @@ set = imageSet(fullfile('matlab/data/nouveau_format/Final-65Hz/Rempli-65Hz'));
 
 %Then test your mask !
 
-array2 = keep_shearing_band(detect_particles(set, 1, data,0), data_mask);
+%array2 = keep_shearing_band(detect_particles(set, 1, data,0), data_mask);
 %display_particles(set, 1, data, array2, 1,1);
 %display_rg(set, 1, data, array2,1);
 
-array_filtered = filter_size_bright(array2, 10000, 'brightness');
+%array_filtered = filter_size_bright(array2, 10000, 'brightness');
 %array_filtered = filter_size_bright(array_filtered, 50, 'radius');
 %display_rg(set, 1, data, array_filtered,1);
 
@@ -72,15 +72,15 @@ array_filtered = filter_size_bright(array2, 10000, 'brightness');
 
 %TRACKING:
 %tr = track_particles(set, data, data2, data_mask, 0); %track without mask
-%tr = track_particles(set, data, data2, data_mask, 1); %track with mask
+tr = track_particles(set, data, data2, data_mask, 1); %track with mask
 
 %Correcting perspective view
 %tr = [uv2XYZ(tr_0, data_perspective, set), tr_0(:,3:4)];
 
 %GET DATA TRACKING
 
-%data_tracking = get_data_tracking(set, tr);
-%display_data_tracking(set, data_tracking);
+data_tracking = get_data_tracking(set, tr);
+display_data_tracking(set, data_tracking);
 %%
 %TO DISPLAY ONLY ONE PARTICULAR COMPUTED TRACK:
 %deltaT = 1;

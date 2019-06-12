@@ -43,7 +43,6 @@ function result = track_particles(set, data, data2, data_cache, isCacheActivated
             cnt = cnt2;
         end
         
-       
         dim = size(cnt);
         nb_part = dim(1,1); % nombre total de particules détectées sur l'image "num_pict"
         total_numb_part = total_numb_part + nb_part;
