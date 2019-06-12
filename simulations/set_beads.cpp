@@ -77,32 +77,35 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	body->GetCollisionModel()->BuildModel();
 	
 	body->SetInertiaXX(0.4 * mass * r_bead * r_bead * ChVector<>(1, 1, 1));
-	auto sphere = std::make_shared<ChSphereShape>();
-	sphere->GetSphereGeometry().rad = r_bead;
-	sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
-	body->AddAsset(sphere);
+	if (isWall == false || isFixed == false) {
+		auto sphere = std::make_shared<ChSphereShape>();
+		sphere->GetSphereGeometry().rad = r_bead;
+		sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
+		body->AddAsset(sphere);
 
-	
-	auto text = std::make_shared<ChTexture>();
-	if (isWall == true) {
-		text->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
-		
-		
-		
+
+		auto text = std::make_shared<ChTexture>();
+		if (isWall == true) {
+			text->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+
+
+
+		}
+		else {
+			text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
+			body->SetId(i);
+		}
+		body->AddAsset(text);
 	}
-	else {
-		text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
-		body->SetId(i);
-	}
-	body->AddAsset(text);
-	
 	
 	if (has_velocity == true) {
-		double vx = ChRandom()*10;
-		double vy = ChRandom() * 10;
-		double vz = ChRandom() * 10;
+		double vx = ChRandom()*2;
+		double vy = ChRandom() * 2;
+		double vz = ChRandom() * 2;
 		body->SetPos_dt(ChVector<>(vx, vy, vz));
-
+		//printf("v dans create bead : %f\n", sqrt(vx*vx + vy * vy + vz * vz));
+		double vx_get = body->GetPos_dt().x();
+		printf("vx = vx_get : %i\n", vx==vx_get);
 	}
 	p_list->push_back(body);
 	mphysicalSystem.AddBody(body);
@@ -138,9 +141,10 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, ISceneManager* ms
 				ChVector<> pos= ChVector<>((r_cyl_ext - r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
 				
 				create_bead(r_bead, mphysicalSystem, pos, mass,true,true,p_list);
-				
-				ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(r_bead, mphysicalSystem, pos2, mass,true, true,p_list);
+				if (j + 1 < floor(height / (2 * r_bead))) {
+					ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))));
+					create_bead(r_bead, mphysicalSystem, pos2, mass, true, true, p_list);
+				}
 			}
 		}
 	}
@@ -216,13 +220,13 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, ISceneManager* ms
 	}
 }
 
-void remplir(ChSystemParallelSMC& mphysicalSystem, ISceneManager* msceneManager, IVideoDriver* driver, double r_bead, double r_cyl_int, double r_cyl_ext, double mass, int methode, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_list) {
+void remplir(ChSystemParallelSMC& mphysicalSystem, ISceneManager* msceneManager, IVideoDriver* driver, double r_bead, double r_cyl_int, double r_cyl_ext, double mass, int methode, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_list, bool has_velocity) {
 	if (methode == 1) {
 		for (int k = 0; k < floor(((r_cyl_ext-r_bead) - (r_cyl_int+r_bead)) / (2*r_bead))-1; k++) {
 			for (int j = 0; j < floor(height_bead / (2 * r_bead)); j = j + 2) {
 				for (int i = 0; i < floor((PI*(r_cyl_int + 3 * r_bead + 2 * k*r_bead)) / r_bead) ; i++) {
 					ChVector <> pos = ChVector<>((r_cyl_int+3*r_bead+2*k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), r_bead  * j + r_bead+2*height_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
-					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,i+j+k);
+					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,i+j+k, has_velocity);
 					
 				}
 			}
@@ -233,7 +237,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem, ISceneManager* msceneManager,
 		for (int k = 0; k < floor(((r_cyl_ext - r_bead) - (r_cyl_int + r_bead)) / (2 * r_bead)) - 1; k++) {
 			for (int i = 0; i < floor((PI*(r_cyl_int + 3 * r_bead + 2 * k*r_bead)) / r_bead); i++) {
 				ChVector <> pos = ChVector<>((r_cyl_int + 3 * r_bead + 2 * k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), 2*height_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
-				create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,i+k+1);
+				create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,i+k+1, has_velocity);
 			}
 		}
 	}
@@ -245,12 +249,12 @@ void remplir(ChSystemParallelSMC& mphysicalSystem, ISceneManager* msceneManager,
 				for (int i = 0; i < floor((PI*(r_cyl_int + 3 * r_bead + 2 * k*r_bead)) / r_bead) + 1; i++) {
 
 					ChVector<> pos = ChVector<>((r_cyl_int + 3 * r_bead + 2 * k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), sqrt(3)*r_bead * j + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
-					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,id);
+					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,id, has_velocity);
 					id = id + 1;
 
 					if (j + 1 < floor(height_bead / (2 * r_bead))) {
 						ChVector<> pos2 = ChVector<>((r_cyl_int + 3 * r_bead + 2 * k*r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
-						create_bead(r_bead, mphysicalSystem, pos2, mass, false, false, p_list,id);
+						create_bead(r_bead, mphysicalSystem, pos2, mass, false, false, p_list,id,has_velocity);
 						id = id + 1;
 					}
 				}
@@ -276,12 +280,39 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 
 	fixedBody->SetMass(1.0);
 	fixedBody->SetBodyFixed(true);
+	fixedBody->SetPos(ChVector<>());
+	fixedBody->SetCollide(true);
+
+	fixedBody->GetCollisionModel()->ClearModel();
+	ChVector<> hsize = 0.5 * ChVector<>(2*r_cyl_ext,1,2*r_cyl_ext);
+	
+	auto box1 = std::make_shared<ChBoxShape>();
+	box1->GetBoxGeometry().Pos = ChVector<>(0,-0.5,0);
+	box1->GetBoxGeometry().Size = hsize;
+	box1->SetColor(ChColor(1, 0, 0));
+	box1->SetFading(0.6f);
+	fixedBody->AddAsset(box1);
+
+	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0,-0.5,0));
+
+	auto box2 = std::make_shared<ChBoxShape>();
+	box2->GetBoxGeometry().Pos = ChVector<>(0, height+0.5, 0);
+	box2->GetBoxGeometry().Size = hsize;
+	box2->SetColor(ChColor(1, 0, 0));
+	box2->SetFading(0.6f);
+	fixedBody->AddAsset(box2);
+
+	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, height+0.5, 0));
+	fixedBody->GetCollisionModel()->BuildModel();
+	/*fixedBody->SetMass(1.0);
+	fixedBody->SetBodyFixed(true);
 	fixedBody->SetPos(ChVector<>(0, -0.5, 0));
 	fixedBody->SetRot(Q_from_AngY(0.0));
 	fixedBody->SetCollide(true);
 	fixedBody->SetMaterialSurface(material);
 	fixedBody->GetCollisionModel()->ClearModel();
 	fixedBody->GetCollisionModel()->AddBox(r_cyl_ext, 1, r_cyl_ext, fixedBody->GetPos(), fixedBody->GetRot());
+	fixedBody->GetCollisionModel()->AddBox(r_cyl_ext, 1, r_cyl_ext, fixedBody->GetPos()+ChVector<>(0,height,0), fixedBody->GetRot());
 	fixedBody->GetCollisionModel()->BuildModel();
 	
 	auto cylinder = std::make_shared<ChBoxShape>();
@@ -295,16 +326,15 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 	textcyl->SetTextureFilename(GetChronoDataFile("blu.png"));
 	fixedBody->AddAsset(textcyl);
 	printf("Test1\n");
-	mphysicalSystem.AddBody(fixedBody);
+	//mphysicalSystem.AddBody(fixedBody);
 	printf("Test2\n");
 
 	//Create seiling
-	auto seiling = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+	/*auto seiling = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 
 	seiling->SetMass(1.0);
 	seiling->SetBodyFixed(true);
-	seiling->SetPos(ChVector<>(0, height+r_bead, 0));
-	seiling->SetRot(Q_from_AngY(0.0));
+	seiling->SetPos(ChVector<>(0, height+r_bead+0.5-1, 0));
 	seiling->SetCollide(true);
 	seiling->SetMaterialSurface(material);
 	seiling->GetCollisionModel()->ClearModel();
@@ -313,23 +343,23 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 
 	auto box_seiling = std::make_shared<ChBoxShape>();
 	box_seiling->GetBoxGeometry().Size = ChVector<>(r_cyl_ext, 0.5, r_cyl_ext);
-	box_seiling->GetBoxGeometry().Pos = ChVector<>(0, 0, 0);
+	box_seiling->GetBoxGeometry().Pos = ChVector<>(0, -0.5, 0);
 	box_seiling->SetColor(ChColor(1, 0, 1));
 	box_seiling->SetFading(0.6f);
-	seiling->AddAsset(box_seiling);
+	fixedBody->AddAsset(box_seiling);*/
 
 	
-	seiling->AddAsset(textcyl);
+	//seiling->AddAsset(textcyl);
 	printf("Test1\n");
-	mphysicalSystem.AddBody(seiling);
+	mphysicalSystem.AddBody(fixedBody);
 	printf("Test2\n");
 	// Add the rotating mixer
 
-	auto rotatingBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(),ChMaterialSurface::SMC); //FIXME
+	auto rotatingBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(),ChMaterialSurface::SMC); 
 
 	rotatingBody->SetMass(10.0);
 	rotatingBody->SetInertiaXX(ChVector<>(50, 50, 50));
-	rotatingBody->SetPos(ChVector<>(0, -1, 0));
+	rotatingBody->SetPos(ChVector<>(0, 0, 0));
 	rotatingBody->SetCollide(true);
 	rotatingBody->SetMaterialSurface(material);
 
@@ -339,7 +369,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 
 	auto box = std::make_shared<ChCylinderShape>();
 	box->GetCylinderGeometry().rad = r_cyl_int;
-	box->GetCylinderGeometry().p1 = ChVector<>(0, height - 1, 0);
+	box->GetCylinderGeometry().p1 = ChVector<>(0, height, 0);
 	box->GetCylinderGeometry().p2 = ChVector<>(0, 0, 0);
 	box->SetColor(ChColor(0, 0, 1));
 	box->SetFading(0.6f);
@@ -347,7 +377,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 
 	mphysicalSystem.AddBody(rotatingBody);
 	
-
+	/*
 	// .. a motor between mixer and truss
 
 	//auto my_motor = std::make_shared<ChLinkMotorRotationSpeed>();
@@ -362,79 +392,38 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 	auto mtexture = std::make_shared<ChTexture>();
 	mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
 	rotatingBody->AddAsset(mtexture);
+	*/
 
-
-	//create_cylinder_ext(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list);
+	create_cylinder_ext(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list);
 
 
 
 	create_cylinder_int(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list);
 
 
-	remplir(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list);
+	remplir(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list, true);
 
 	//printf("taille beads_list %i \n", p_beads_list->size());
 
 
 }
 
-void create_array_velocity(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<double>* p_tab_v_r, ChVectorDynamic<double>* p_tab_v_t, ChVectorDynamic<double>* p_tab_r, ChVectorDynamic<double>* p_tab_theta, ChVectorDynamic<int>* p_tab_id,double height_bead, double r_bead) {
+void create_array_velocity(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<double>* p_tab_v) {
 	
-	vector<std::shared_ptr<ChBody>> surface;
-	
-	
-	for (int i = 0; i<p_beads_list->size(); ++i) {
+	p_tab_v->Reset(p_beads_list->size());
+
+	for (int i = 0; i < p_beads_list->size(); ++i) {
+		double v_x= (*p_beads_list)[i]->GetPos_dt().x();
+		double v_z = (*p_beads_list)[i]->GetPos_dt().z();
+		double v_y = (*p_beads_list)[i]->GetPos().y();
+		
+		//printf("v : %f\n", sqrt(v_x*v_x+v_z*v_z+v_y*v_y));
+		p_tab_v->SetElementN(i, sqrt(v_x*v_x+v_y*v_y+v_z*v_z));
 		
 		
-		bool au_dessus = false;
-		double y = (*p_beads_list)[i]->GetPos().y();
-		double x = (*p_beads_list)[i]->GetPos().x();
-		double z = (*p_beads_list)[i]->GetPos().z();
-		
-		for (int j=0; j<p_beads_list->size(); ++j) {
-			
-			double y2 = (*p_beads_list)[j]->GetPos().y();
-			double x2 = (*p_beads_list)[j]->GetPos().x();
-			double z2 = (*p_beads_list)[j]->GetPos().z();
-			if ((y2 > y +2* r_bead) && sqrt((x2-x)*(x2-x)+(z2-z)*(z2-z))<r_bead/2 && au_dessus==false) {
-				au_dessus = true;
-			}
-		}
-		if (au_dessus == false) {
-			surface.push_back((*p_beads_list)[i]);
-			
-		}
-	
-	}
-	
-	
-	
-	p_tab_r->Reset(surface.size());
-	p_tab_v_r->Reset(surface.size());
-	p_tab_v_t->Reset(surface.size());
-	p_tab_theta->Reset(surface.size());
-	p_tab_id->Reset(surface.size());
-	printf("tab_id : [");
-	for (int i = 0; i < surface.size(); ++i) {
-		double v_x= surface[i]->GetPos_dt().x();
-		double v_z = surface[i]->GetPos_dt().z();
-		double theta = atan2(surface[i]->GetPos().z(),surface[i]->GetPos().x());
-		//printf("v : %f\n", sqrt(v_x*v_x+v_z*v_z));
-		
-		
-		double r = sqrt(surface[i]->GetPos().x()*surface[i]->GetPos().x() + surface[i]->GetPos().z()*surface[i]->GetPos().z());
-		double v_r = v_x * cos(theta) + v_z * sin(theta);
-		double v_t = v_z * cos(theta) - v_x * sin(theta);
-		
-		p_tab_r->SetElementN(i, r);
-		p_tab_v_r->SetElementN(i, v_r);
-		p_tab_v_t->SetElementN(i, v_t);
-		p_tab_theta->SetElementN(i, theta);
-		p_tab_id->SetElementN(i, surface[i]->GetId());
-		printf("%i,", p_tab_id->GetElementN(i));
 
 	}
-	printf("]\n");
+	
 }
 
 double mean_vector(ChVectorDynamic<double>* p_vector) {
@@ -457,25 +446,6 @@ bool is_in_mouvement(std::vector< std::shared_ptr< ChBody > >* p_beads_list) {//
 	return (!(mean_v-1.0<0.0001 && mean_v-1.0>-0.0001) );
 }
 
-void vel_by_radius(ChVectorDynamic<double>* p_tab_vel_r, ChVectorDynamic<double>* p_tab_vel_t, ChVectorDynamic<double>* p_r, ChVectorDynamic<double>* p_mean__v_r, ChVectorDynamic<double>* p_mean_v_t, double r_cyl_int, double r_bead, double r_cyl_ext) {
-	ChVectorDynamic<double> tab_v_r_loc;
-	ChVectorDynamic<double> tab_v_t_loc;
-	for (int i = 0; i < floor(r_cyl_ext - r_cyl_int / (2 * r_bead)); i++) {
-		double r_considere = r_cyl_int + r_bead + 2 * i*r_bead;
-		tab_v_r_loc.Reset();
-		tab_v_t_loc.Reset();
-		double s_v_r_loc=0;
-		double s_v_t_loc=0;
-		int c = 0;
-		for (int j = 0; j < p_tab_vel_t->GetLength(); j++) {
-			if (p_r->GetElementN(j) - r_considere - r_bead < 0.001 && p_r->GetElementN(j) - r_considere - r_bead < -0.001) {
-				s_v_r_loc = s_v_r_loc + p_tab_vel_r->GetElementN(i);
-				s_v_t_loc = s_v_t_loc + p_tab_vel_t->GetElementN(i);
-				c = c + 1;
-			}
-		}
-	}
-}
 
 int main(int argc, char* argv[]) {
 	GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
@@ -551,7 +521,7 @@ int main(int argc, char* argv[]) {
 	
 	create_some_falling_items(mphysicalSystem, application.GetSceneManager(), application.GetVideoDriver(), r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list,p_beads_list, motor);
 	
-	ChVectorDynamic<double>* p_tab_vel_r(0);
+	/*ChVectorDynamic<double>* p_tab_vel_r(0);
 	ChVectorDynamic<double> tab_vel_r=ChVectorDynamic<double>(0);
 	p_tab_vel_r = &tab_vel_r;
 
@@ -571,18 +541,25 @@ int main(int argc, char* argv[]) {
 	ChVectorDynamic<int> tab_id = ChVectorDynamic<int>(0);
 	p_tab_id = &tab_id;
 
-	create_array_velocity(p_beads_list, p_tab_vel_r, p_tab_vel_t, p_tab_r,p_tab_theta,p_tab_id, height_bead, r_bead);
+	ChVectorDynamic<double>* p_tab_v_y(0);
+	ChVectorDynamic<double> tab_v_y = ChVectorDynamic<double>(0);
+	p_tab_v_y = &tab_v_y;*/
+
+	ChVectorDynamic<double>* p_tab_v(0);
+	ChVectorDynamic<double> tab_v = ChVectorDynamic<double>(0);
+	p_tab_v = &tab_v;
+	create_array_velocity(p_beads_list, p_tab_v);
 
 
 
-	std::string filename ="graphes.gpl";
+	/*std::string filename ="graphes.gpl";
 	ChGnuPlot mplot(filename.c_str());
-	mplot.SetGrid();
+	mplot.SetGrid();*/
 	
 	// create a .dat file with three columns of demo data:
 	std::string datafile = "test_gnuplot_data.dat";
 	ChStreamOutAsciiFile mdatafile(datafile.c_str());
-
+	mdatafile << 0 << ", " << "mean_v" << "\n";
 	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead/2);
 
 	// Use this function for adding a ChIrrNodeAsset to all items
@@ -608,38 +585,23 @@ int main(int argc, char* argv[]) {
 			video::SColor(255, 80, 100, 100), true);
 		application.DrawAll();
 		
-		std::string time_s = "time : " +std::to_string(time);
-		char *cstr = new char[time_s.length() + 1];
-		time_s.copy(cstr, time_s.length());
-		cstr[time_s.length()] = '\0';
-		strcpy(cstr, time_s.c_str());
 		printf("time :%f\n", time);
 		
-		if (time > 0.5 && motor_launched==false) {
-			in_mouvement = is_in_mouvement(p_beads_list);
-			
-		}
 
-		if (in_mouvement==false && motor_launched==false) {
-			
-			auto mfun = std::make_shared<ChFunction_Const>(rotation_speed);  
-			(*motor)->SetSpeedFunction(mfun);
-			motor_launched = true;
+		
+		
 
-		}
-		//printf("On arrive ici : %i\n", mphysicalSystem.Get_bodylist().size());
-		//mphysicalSystem.RemoveBody(mphysicalSystem.Get_bodylist()[mphysicalSystem.Get_bodylist().size()-1]);
-
-		if (motor_launched == true && (time - i<0.001 && time - i>-0.001)) {
-			printf("on cree les graphes\n");
-			create_array_velocity(p_beads_list, p_tab_vel_r, p_tab_vel_t, p_tab_r, p_tab_theta,p_tab_id, height_bead, r_bead);
-			//mplot.Plot(*p_tab_r, *p_tab_vel_t, cstr, "with points");
+	
+		printf("on cree les graphes\n");
+		create_array_velocity(p_beads_list, p_tab_v);
+		printf("moyenne v : %f\n", mean_vector(p_tab_v));
+		//mplot.Plot(*p_tab_r, *p_tab_vel_t, cstr, "with points");
 			
-			for (int j = 0; j < p_tab_vel_r->GetLength(); j++) {
-				mdatafile << 0 << ", " << 0 << "," << id_frame << "," << p_tab_id->GetElementN(j) << "," << p_tab_vel_r->GetElementN(j) << ", " << p_tab_vel_t->GetElementN(j) << "," << p_tab_r->GetElementN(j) << "\n";
-			}
-			id_frame = id_frame + 1;
-		}
+		
+		mdatafile << time << ", " << mean_vector(p_tab_v) << "\n";
+		
+		id_frame = id_frame + 1;
+		
 
 		if (time - i<0.001 && time - i>-0.001) {
 			i = i + 0.5;
