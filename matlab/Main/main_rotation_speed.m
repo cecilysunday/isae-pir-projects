@@ -50,7 +50,7 @@ hold on;
 %plot_circle(interior_circle);
 
 %Method 2: dynamique (interpolation à partir de trajectoires)
-[all_circles2, interior_circle2,deltaX2,deltaY2,deltaR2] = interpolate_average(tr, set, 50);
+[all_circles2, interior_circle2,deltaX2,deltaY2,deltaR2] = interpolate_average(tr, set, 55);
 plot_circle(all_circles2);
 %plot_circle(interior_circle2);
 %%
