@@ -40,7 +40,7 @@ data_perspective = [fdivZ p_s];
 %Interpolate a circle and plot it to check if the least-square
 %interpolation is correct
 
-%Method 1: statique (détection et interpolation sur chaque image du set)
+%Method 1: statique (dï¿½tection et interpolation sur chaque image du set)
 [all_circles1,interior_circle1,deltaX1,deltaY1,deltaR1] = calculate_radius_cell(set, data, data_mask, data_perspective);
 figure;
 display_picture(set,1,data,0);
@@ -48,7 +48,7 @@ hold on;
 plot_circle(all_circles1);
 %plot_circle(interior_circle);
 
-%Method 2: dynamique (interpolation à partir de trajectoires)
+%Method 2: dynamique (interpolation ï¿½ partir de trajectoires)
 [all_circles2, interior_circle2,deltaX2,deltaY2,deltaR2] = interpolate_average(tr, set, 50);
 figure;
 display_picture(set,1,data,0);
@@ -56,7 +56,7 @@ hold on;
 plot_circle(all_circles2);
 %plot_circle(interior_circle2);
 %%
-%Cercle moyen sur les 2 méthodes
+%Cercle moyen sur les 2 mï¿½thodes
 %interior_circle = [interior_circle1;interior_circle2];
 %mean_circle(1,:) = mean(interior_circle(:,:));
 %plot_circle(mean_circle);
