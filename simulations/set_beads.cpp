@@ -99,13 +99,14 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	}
 	
 	if (has_velocity == true) {
-		double vx = ChRandom()*2;
-		double vy = ChRandom() * 2;
+		double vx = ChRandom() * 2;
+		double vy =  ChRandom() * 2;
 		double vz = ChRandom() * 2;
-		body->SetPos_dt(ChVector<>(vx, vy, vz));
-		//printf("v dans create bead : %f\n", sqrt(vx*vx + vy * vy + vz * vz));
-		double vx_get = body->GetPos_dt().x();
-		printf("vx = vx_get : %i\n", vx==vx_get);
+		ChVector<> pos = ChVector<>(vx, vy, vz);
+
+		body->SetPos_dt(pos);
+		body->SetIdentifier(i);
+		
 	}
 	p_list->push_back(body);
 	mphysicalSystem.AddBody(body);
@@ -377,12 +378,12 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 
 	mphysicalSystem.AddBody(rotatingBody);
 	
-	/*
+	
 	// .. a motor between mixer and truss
 
 	//auto my_motor = std::make_shared<ChLinkMotorRotationSpeed>();
 	(*motor)->Initialize(rotatingBody, fixedBody, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngAxis(CH_C_PI_2, VECT_X)));
-	auto mfun = std::make_shared<ChFunction_Const>(0.0);  // speed w=90°/s CH_C_PI / 2.0
+	auto mfun = std::make_shared<ChFunction_Const>(CH_C_PI/2.0);  // speed w=90°/s CH_C_PI / 2.0
 	//auto mfun = std::make_shared<ChFunction_Const>(0);
 	(*motor)->SetSpeedFunction(mfun);
 	//(*motor)->SetAvoidAngleDrift(0);
@@ -392,7 +393,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, ISceneManag
 	auto mtexture = std::make_shared<ChTexture>();
 	mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
 	rotatingBody->AddAsset(mtexture);
-	*/
+	
 
 	create_cylinder_ext(mphysicalSystem, msceneManager, driver, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list);
 
@@ -415,9 +416,9 @@ void create_array_velocity(std::vector< std::shared_ptr< ChBody > >* p_beads_lis
 	for (int i = 0; i < p_beads_list->size(); ++i) {
 		double v_x= (*p_beads_list)[i]->GetPos_dt().x();
 		double v_z = (*p_beads_list)[i]->GetPos_dt().z();
-		double v_y = (*p_beads_list)[i]->GetPos().y();
+		double v_y = (*p_beads_list)[i]->GetPos_dt().y();
 		
-		//printf("v : %f\n", sqrt(v_x*v_x+v_z*v_z+v_y*v_y));
+		
 		p_tab_v->SetElementN(i, sqrt(v_x*v_x+v_y*v_y+v_z*v_z));
 		
 		
@@ -442,7 +443,7 @@ bool is_in_mouvement(std::vector< std::shared_ptr< ChBody > >* p_beads_list) {//
 		
 	}
 	double mean_v = mean_vector(&tab_v);
-	printf("mean_v : %f\n", mean_v);
+	//printf("mean_v : %f\n", mean_v);
 	return (!(mean_v-1.0<0.0001 && mean_v-1.0>-0.0001) );
 }
 
@@ -539,16 +540,16 @@ int main(int argc, char* argv[]) {
 
 	ChVectorDynamic<int>* p_tab_id(0);
 	ChVectorDynamic<int> tab_id = ChVectorDynamic<int>(0);
-	p_tab_id = &tab_id;
+	p_tab_id = &tab_id;*/
 
-	ChVectorDynamic<double>* p_tab_v_y(0);
-	ChVectorDynamic<double> tab_v_y = ChVectorDynamic<double>(0);
-	p_tab_v_y = &tab_v_y;*/
+	ChVectorDynamic<double>* p_tab_v_cyl_int(0);
+	ChVectorDynamic<double> tab_v_cyl_int = ChVectorDynamic<double>(0);
+	p_tab_v_cyl_int = &tab_v_cyl_int;
 
 	ChVectorDynamic<double>* p_tab_v(0);
 	ChVectorDynamic<double> tab_v = ChVectorDynamic<double>(0);
 	p_tab_v = &tab_v;
-	create_array_velocity(p_beads_list, p_tab_v);
+	//create_array_velocity(p_beads_list, p_tab_v);
 
 
 
@@ -557,9 +558,14 @@ int main(int argc, char* argv[]) {
 	mplot.SetGrid();*/
 	
 	// create a .dat file with three columns of demo data:
-	std::string datafile = "test_gnuplot_data.dat";
-	ChStreamOutAsciiFile mdatafile(datafile.c_str());
-	mdatafile << 0 << ", " << "mean_v" << "\n";
+	std::string datafile = "mean_v_data.dat";
+	ChStreamOutAsciiFile mean_v(datafile.c_str());
+	mean_v << "time" << ", " << "mean_v" << "\n";
+
+	std::string datafile2 = "position.dat";
+	ChStreamOutAsciiFile position(datafile2.c_str());
+	position << "x" << ", " << "y" << "," << "z" << "\n";
+
 	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead/2);
 
 	// Use this function for adding a ChIrrNodeAsset to all items
@@ -586,27 +592,20 @@ int main(int argc, char* argv[]) {
 		application.DrawAll();
 		
 		printf("time :%f\n", time);
-		
-
-		
-		
-
-	
-		printf("on cree les graphes\n");
 		create_array_velocity(p_beads_list, p_tab_v);
-		printf("moyenne v : %f\n", mean_vector(p_tab_v));
-		//mplot.Plot(*p_tab_r, *p_tab_vel_t, cstr, "with points");
-			
+		printf("moyenne v : %f\n", mean_vector(p_tab_v));		
+		mean_v << time << ", " << mean_vector(p_tab_v) << "\n";
 		
-		mdatafile << time << ", " << mean_vector(p_tab_v) << "\n";
 		
-		id_frame = id_frame + 1;
+		if (mean_vector(p_tab_v) < 0.001 && in_mouvement==true) {
+			in_mouvement = false;
+			for (int j = 0; j < p_beads_list->size(); j++) {
+				position << (*p_beads_list)[i]->GetPos().x() << "," << (*p_beads_list)[i]->GetPos().y() << "," << (*p_beads_list)[i]->GetPos().z() << "\n";
+			}
+			printf("Les positions ont bien ete enregistrees\n");
+		}
 		
 
-		if (time - i<0.001 && time - i>-0.001) {
-			i = i + 0.5;
-			printf("i : %f\n", i);
-		}
 
 		while (time < out_time) {
 			mphysicalSystem.DoStepDynamics(time_step);
