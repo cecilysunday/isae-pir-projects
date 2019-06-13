@@ -1,0 +1,12 @@
+## FOLDERS
+
+/matlab/data
+/Image pour soutenance
+/Biblio
+/Motor_settings.pdp
+/Setting_camera.xml
+/interpolation
+
+## MATLAB
+*.asv
+*.m~

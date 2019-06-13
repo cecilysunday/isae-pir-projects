@@ -12,12 +12,12 @@ y02 = 0;
 y03 = 0; 
 
 %e = eccentricity of the ellipses
-e = 0.25; 
+e = 0.2; 
 e2 = 0;
 e3 = 0; 
 
 %a = semi-major axis of the intern ellipse 
-a = 525;
+a = 555; %525
 a2 = 0;
 a3 = 0;
  
@@ -65,8 +65,8 @@ width3 = 0;
 %Pour d�tecter beaucoup de particules sur une image, mettre la valeur � 0.
 %Pour d�tecter peu de particules, augmenter la valeur de ce param�tre
 
-blob_diam = 4;
-th = 0;%35
+blob_diam = 18;
+th = 10;%35
 sz = blob_diam; 
 sz2 = blob_diam + 3;
 brightn_tr = 300;

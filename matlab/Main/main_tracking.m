@@ -3,6 +3,7 @@ clear,clc
 %STEP 1: LOAD MATLAB ENVIRONMENT
 
 addpath('matlab/Main');
+addpath('matlab/Parameters_tests');
 addpath('matlab/PTV_algorithm');
 addpath('matlab/PTV_algorithm/1-acquisition');
 addpath('matlab/PTV_algorithm/2-mask');
@@ -33,14 +34,14 @@ data_perspective = [fdivZ p_s];
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('matlab/data/nouveau_format/Final-65Hz/Rempli-65Hz'));
+set = imageSet(fullfile('matlab/data/nouveau_format/70Hz-Tracking'));
 %--------------------------------------------------------------------------
 %%
 %STEP 4: CREATION OF A MASK (go in parameters.m and set the mask parameters 
 %to the desired values. Make sure the mask is OK by printing it with the     
 %mask function below)
 
-%mask(set, data_mask);
+mask(set, data_mask);
 %%
 %--------------------------------------------------------------------------
 %STEP 5: DETECTION OF PARTICLES (go in parameters.m and set the detection 
@@ -57,9 +58,9 @@ set = imageSet(fullfile('matlab/data/nouveau_format/Final-65Hz/Rempli-65Hz'));
 
 array2 = keep_shearing_band(detect_particles(set, 1, data,0), data_mask);
 %display_particles(set, 1, data, array2, 1,1);
-%display_rg(set, 1, data, array2,1);
+display_rg(set, 1, data, array2,1);
 
-array_filtered = filter_size_bright(array2, 10000, 'brightness');
+%array_filtered = filter_size_bright(array2, 10000, 'brightness');
 %array_filtered = filter_size_bright(array_filtered, 50, 'radius');
 %display_rg(set, 1, data, array_filtered,1);
 
@@ -74,22 +75,22 @@ array_filtered = filter_size_bright(array2, 10000, 'brightness');
 
 %TRACKING:
 %tr = track_particles(set, data, data2, data_mask, 0); %track without mask
-%tr = track_particles(set, data, data2, data_mask, 1); %track with mask
+tr = track_particles(set, data, data2, data_mask, 1); %track with mask
 
 %Correcting perspective view
 %tr = [uv2XYZ(tr_0, data_perspective, set), tr_0(:,3:4)];
 
 %GET DATA TRACKING
 
-%data_tracking = get_data_tracking(set, tr);
-%display_data_tracking(set, data_tracking);
+data_tracking = get_data_tracking(set, tr);
+display_data_tracking(set, data_tracking);
 %%
 %TO DISPLAY ONLY ONE PARTICULAR COMPUTED TRACK:
-%deltaT = 1;
-%display_track_nb(set, tr, deltaT, 918);
+deltaT = 1;
+%display_track_nb(set, tr2, deltaT, 826);
 
 %TO DISPLAY ALL THE COMPUTED TRACKS AT THE SAME TIME:
-%display_tracks(set, tr, deltaT);
+display_tracks(set, tr, deltaT);
 %%
 %TO DISPLAY ALL THE COMPUTED TRACKS ONE AFTER THE OTHER:
 % sz = size(tr);
@@ -109,5 +110,6 @@ clear data2 deltaT maxdisp mem good quiet
 clear data_perspective fdivZ p_s
 clear directory videoname 
 clear sz i
+clear array2 array_filtered
 clear brightness_threshold radius_threshold thresholds
 %--------------------------------------------------------------------------
