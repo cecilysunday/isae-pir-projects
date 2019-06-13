@@ -98,6 +98,7 @@ message(STATUS "==== Chrono Validation Testing - Taylor Couette ====")
 set(TESTS
     my_example 
 set_beads
+run
     )
 
 
