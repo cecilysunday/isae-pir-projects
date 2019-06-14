@@ -32,13 +32,16 @@ regions = [regions(1:NB_LAYER_IN_SB),regions(NB_LAYER_IN_SB+2:end)];
 Vel_reg = Vel_region_time(regions,tr4);
 %% 
 %STEP 3: DISPLAY VELOCITIES
-PIXEL_SCALE = 4.745; %5.13;
+PIXEL_SCALE = 5.13;%4.745; 
 R_LAYER_WIDE = 30;
 PICTURE_BAND = 150;
+LEGEND = 65;
+PIXEL = [5.13,4.745];
 %display_velocity(tr4,v_mean,PIXEL_SCALE);
 %display_velocity_in_time(tr3,PIXEL_SCALE,PICTURE_BAND,R_LAYER_WIDE);
 %display_Vel_region_time(Vel_reg);
-display_Vel_error_bars(Vel_reg);
+%display_Vel_error_bars(Vel_reg,PIXEL_SCALE);
+profile_for_different_rotation_speed(PIXEL);
 
 %STEP 4: CLEAR THE WORKSPACE PLEASE TWROW THE USELESS DATA/VARIABLES
 clear PIXEL_SCALE R_LAYER_WIDE PERCENT SKIPSTEP CENTERX CENTERY PICTURE_BAND TIMESTEP 
