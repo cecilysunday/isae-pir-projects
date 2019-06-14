@@ -56,15 +56,14 @@ hold on;
 plot_circle(all_circles2);
 %plot_circle(interior_circle2);
 %%
-%Cercle moyen sur les 2 mï¿½thodes
+%Cercle moyen sur les 2 métthodes
 %interior_circle = [interior_circle1;interior_circle2];
 %mean_circle(1,:) = mean(interior_circle(:,:));
 %plot_circle(mean_circle);
-
-%CENTERX = interior_circle2(1,1);
-%CENTERY = interior_circle2(1,2);
-%INNER_RADIUS = 100; %(mm)
-%INNER_RADIUS = interior_circle2(1,3);
+%%
+CENTERX = interior_circle2(1,1);
+CENTERY = interior_circle2(1,2);
+INNER_RADIUS = interior_circle2(1,3);
 %--------------------------------------------------------------------------
 %STEP 4: CHOOSE ONLY INTERESTING TRAJECTORIES
 
@@ -73,14 +72,14 @@ plot_circle(all_circles2);
 %the set of trajectories tr all the trajectories where the particle has 
 %been followed among less than PERCENT/100 of all the images
 
-%PERCENT = 50; %in [0 100]
-%tr2 = compute_new_tr(tr, data_tracking, PERCENT);
-%data_tracking2 = get_data_tracking(set,tr2);
+PERCENT = 50; %in [0 100]
+tr2 = compute_new_tr(tr, data_tracking, PERCENT);
+data_tracking2 = get_data_tracking(set,tr2);
 %--------------------------------------------------------------------------
 %STEP 5: COMPUTE THE ANGULAR VELOCITY
 
 %The time step between 2 successive frames
-%TIMESTEP = 1/102;
+TIMESTEP = 1/102;
 
 %Method: 
 %To fight against the tracking inacuracy, we define a SKIPSTEP. It means
@@ -89,7 +88,8 @@ plot_circle(all_circles2);
 %stocked in tr3.
 %The choice of the value for SKIPSTEP is very important!
 
-%data_angular = get_data_omega_skipstep(tr2, data_tracking2, TIMESTEP, INNER_RADIUS, CENTERX, CENTERY, -0.15, 15);
+data_angular = get_data_omega_skipstep(tr2, data_tracking2, TIMESTEP, INNER_RADIUS, CENTERX, CENTERY, -0.15, 15);
+%%
 %--------------------------------------------------------------------------
 %STEP 8: CLEAR THE WORKSPACE PLEASE TWROW THE USELESS DATA/VARIABLES
 

@@ -65,8 +65,8 @@ width3 = 0;
 %Pour détecter beaucoup de particules sur une image, mettre la valeur à 0.
 %Pour détecter peu de particules, augmenter la valeur de ce paramètre
 
-blob_diam = 18;
-th = 30;
+blob_diam = 4;
+th = 24;
 sz = blob_diam; 
 sz2 = blob_diam + 3;
 brightn_tr = 300;

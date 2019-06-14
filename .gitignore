@@ -1,0 +1,12 @@
+## FOLDERS
+
+/matlab/data
+/algorithm_2
+/matlab_OLD
+simulations
+tractrac_all
+algorithm_1.zip
+
+## MATLAB
+*.asv
+*.m~
