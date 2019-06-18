@@ -38,7 +38,7 @@ for i=1:sz(1)
 end
 
 figure; 
-title('radius');
+title('square of the radius');
 hold on;
 axis ij equal;
 for i=1:sz(1)

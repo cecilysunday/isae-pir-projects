@@ -2,12 +2,12 @@
 %PARAMETERS FOR BUILDING THE MASK(S)
 
 %x0 = x-center of the ellipses 
-x0 = 1000;
+x0 = 1120;%1000;
 x02 = 0;
 x03 = 0;
 
 %y0 = y-Center of the ellipses 
-y0 = 290; 
+y0 = 310; %290; 
 y02 = 0;
 y03 = 0; 
 
@@ -17,12 +17,12 @@ e2 = 0;
 e3 = 0; 
 
 %a = semi-major axis of the intern ellipse 
-a = 525;
+a = 565;%485;
 a2 = 0;
 a3 = 0;
  
 %width = width of the mask 
-width = 35;
+width = 30;%20;
 width2 = 0; 
 width3 = 0;
 %--------------------------------------------------------------------------
@@ -65,11 +65,34 @@ width3 = 0;
 %Pour détecter beaucoup de particules sur une image, mettre la valeur à 0.
 %Pour détecter peu de particules, augmenter la valeur de ce paramètre
 
-blob_diam = 4;
-th = 24;
+%biblio-interpolation
+% blob_diam = 18;   
+% th = 20;
+% sz = blob_diam; 
+% sz2 = blob_diam + 3;
+% brightn_tr = 400;
+
+
+% blob_diam = 16;   
+% th = 8;%30;
+% sz = blob_diam; 
+% sz2 = blob_diam + 3;
+% brightn_tr = 300;
+
+% %Laser parameters %40Hz
+% blob_diam = 4;   
+% th = 25;
+% sz = blob_diam; 
+% sz2 = blob_diam + 3;
+% brightn_tr = 300;
+
+%Laser parameters %50Hz
+blob_diam = 4;   
+th = 15;
 sz = blob_diam; 
 sz2 = blob_diam + 3;
-brightn_tr = 300;
+brightn_tr = 400;
+
 %--------------------------------------------------------------------------
 %PARAMETERS USED FOR THE TRACKING
 

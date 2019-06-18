@@ -41,22 +41,22 @@ data_perspective = [fdivZ p_s];
 %interpolation is correct
 
 %Method 1: statique (dï¿½tection et interpolation sur chaque image du set)
-[all_circles1,interior_circle1,deltaX1,deltaY1,deltaR1] = calculate_radius_cell(set, data, data_mask, data_perspective);
-figure;
-display_picture(set,1,data,0);
-hold on;
-plot_circle(all_circles1);
+%[all_circles1,interior_circle1,deltaX1,deltaY1,deltaR1] = calculate_radius_cell(set, data, data_mask, data_perspective);
+%figure;
+%display_picture(set,1,data,0);
+%hold on;
+%plot_circle(all_circles1);
 %plot_circle(interior_circle);
 
 %Method 2: dynamique (interpolation ï¿½ partir de trajectoires)
-[all_circles2, interior_circle2,deltaX2,deltaY2,deltaR2] = interpolate_average(tr, set, 50);
+[all_circles2, interior_circle2,deltaX2,deltaY2,deltaR2] = interpolate_average(tr, set, 100);
 figure;
 display_picture(set,1,data,0);
 hold on;
 plot_circle(all_circles2);
 %plot_circle(interior_circle2);
 %%
-%Cercle moyen sur les 2 métthodes
+%Cercle moyen sur les 2 méthodes
 %interior_circle = [interior_circle1;interior_circle2];
 %mean_circle(1,:) = mean(interior_circle(:,:));
 %plot_circle(mean_circle);
@@ -72,7 +72,7 @@ INNER_RADIUS = interior_circle2(1,3);
 %the set of trajectories tr all the trajectories where the particle has 
 %been followed among less than PERCENT/100 of all the images
 
-PERCENT = 50; %in [0 100]
+PERCENT = 15; %in [0 100]
 tr2 = compute_new_tr(tr, data_tracking, PERCENT);
 data_tracking2 = get_data_tracking(set,tr2);
 %--------------------------------------------------------------------------

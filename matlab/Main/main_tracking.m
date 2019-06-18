@@ -33,14 +33,15 @@ data_perspective = [fdivZ p_s];
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('matlab/data/nouveau_format/Final_test/70Hz-Tracking'));
+set = imageSet(fullfile('matlab/data/nouveau_format/angular_velocity/65Hz'));
+%set = imageSet(fullfile('matlab/data/experiences/Regime_transitoire/Profil_de_vitesse/40Hz'));
 %--------------------------------------------------------------------------
 %%
 %STEP 4: CREATION OF A MASK (go in parameters.m and set the mask parameters 
 %to the desired values. Make sure the mask is OK by printing it with the     
 %mask function below)
 
-%mask(set, data_mask);
+mask(set, data_mask);
 %%
 %--------------------------------------------------------------------------
 %STEP 5: DETECTION OF PARTICLES (go in parameters.m and set the detection 
@@ -55,8 +56,8 @@ set = imageSet(fullfile('matlab/data/nouveau_format/Final_test/70Hz-Tracking'));
 
 %Then test your mask !
 
-%array2 = keep_shearing_band(detect_particles(set, 1, data,0), data_mask);
-%display_particles(set, 1, data, array2, 1,1);
+array2 = keep_shearing_band(detect_particles(set, 1, data,0), data_mask);
+display_particles(set, 1, data, array2, 1,1);
 %display_rg(set, 1, data, array2,1);
 
 %array_filtered = filter_size_bright(array2, 10000, 'brightness');
@@ -89,13 +90,13 @@ display_data_tracking(set, data_tracking);
 %display_track_nb(set, tr, deltaT, 918);
 
 %TO DISPLAY ALL THE COMPUTED TRACKS AT THE SAME TIME:
-%display_tracks(set, tr, deltaT);
+%display_tracks(set, tr2, deltaT);
 %%
 %TO DISPLAY ALL THE COMPUTED TRACKS ONE AFTER THE OTHER:
-% sz = size(tr);
-% for i=1:tr(sz(1,1),4)
-%     display_track_nb(set, tr, deltaT, i);
-% end
+%sz = size(tr2);
+%for i=1:tr2(sz(1,1),4)
+%    display_track_nb(set, tr2, deltaT, i);
+%end
 
 %clear tr
 %--------------------------------------------------------------------------

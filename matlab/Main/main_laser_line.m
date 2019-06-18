@@ -13,66 +13,65 @@ addpath('matlab/PTV_algorithm/5-exploitation/interpolation');
 addpath('matlab/PTV_algorithm/5-exploitation/data_tracking');
 addpath('matlab/PTV_algorithm/5-exploitation/velocity');
 addpath('matlab/PTV_algorithm/5-exploitation/laser_profil');
-
+%%
 % STEP 2: LOAD PARAMETERS FOR DETECTION (modify the parameters in 
 % parameters_tracking.m)
-
-%%
 parameters_tracking;
 data = [blob_diam th sz sz2 brightn_tr]; %parameters used for detection
 %%
-
 %STEP 3: LOAD IMAGES FROM AN INPUT VIDEO OR FROM A COLLECTION OF IMAGES
 
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('matlab/data/nouveau_format/Final_test/70Hz-LaserLine'));
+%set = imageSet(fullfile('matlab/data/nouveau_format/Final_test/70Hz-LaserLine'));
+set = imageSet(fullfile('matlab/data/experiences/Calibrage_laser/12mm'));
+%set = imageSet(fullfile('matlab/data/experiences/Laser_evolution'));
 %%
-
 %STEP 4: CREATION OF A MASK (Make sure the mask is OK by printing it with the     
 %script below)
 
 %parameters for the rectangular mask:
-x0 = 315; 
-y0 = 320; 
-long = 157; 
-larg = 45;
+x0 = 310; %325 
+y0 = 285; %390 
+long = 158; 
+larg = 60;
 
 data_mask = [x0 y0 long larg];
 %%
-%display the picture with your mask
+%display the first picture of the set with your mask
 display_picture(set, 1, data, 0);
 rectangle('Position',[x0 y0 long larg],'EdgeColor','b', 'LineWidth', 2);
 %%
-
 %STEP 5: DETECTION OF PARTICLES (go in parameters_tracking.m and set the detection 
 %parameters to the desired values. Make sure the detection is OK by 
 %detecting particles in the first image of the set and by printing all the 
 %detected particles in the image)
 
 %elimination of the particles wich are not under the mask
-array = detect_particles(set, 1, data, 0);
+num_image = 1;
+array = detect_particles(set, num_image, data, 0);
 array = check_rectangular_mask(data_mask, array);
 
-%plot the image with all the detected particles under the rectangular mask
-display_particles(set, 1, data, array, 1, 0); 
+%plot the first image of the set with all the detected particles which are
+%under the rectangular mask
+display_particles(set, num_image, data, array, 1, 0); 
 %%
+%STEP 6: build a profile of surface through time
 
-%STEP 6: build a profil, correct perspective effects and display it
-
-theta = 0.6435; %angle of projection (rad)
-[data_profil_proj,data_profil] = build_profil(set, data_mask, data, theta);
+%Parameters used to build the profile
+theta = 0.6435; %angle of projection (angle of the camera) (rad)
+pixel_scale = 1.0499; %(pixels/mm)
+zero = 327.2; %The value (in pixel) which is considered to be height = 0 (so 
+            %the origin of the y-coordinates axis)
 %%
-
-theta = 0.6435; %angle of projection (rad)
-display_laser_profile(set, data_profil_proj, data_profil, data_mask, data, 0.5, set.Count/100, theta);
-%display_laser_profile_in_time(set, data_profil_proj, data_mask,set.Count/10);
-
+%Build your profile
+[data_profil_proj,data_profil] = build_profil(set, data_mask, data, theta, pixel_scale, zero);
 %%
-
-theta = 0.6435;
-get_GIF(set,data_profil_proj,data_mask,'radial_profile_70Hz',set.Count/100, theta);
+display_laser_profile(set, data_profil_proj, data_profil, data_mask, data, 0.5, 10, theta, pixel_scale, zero);
+%display_laser_profile_in_time(set, data_profil_proj,data_mask,1,theta, pixel_scale, zero, 1, 1);
+%get_GIF(set,data_profil_proj,data_mask,'radial_profile',5, theta, pixel_scale, zero);
+%%
 
 %%
 
