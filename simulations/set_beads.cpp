@@ -423,38 +423,38 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	fixedBody->SetMass(1.0);
 	fixedBody->SetBodyFixed(true);
 	fixedBody->SetPos(ChVector<>());
-	
+
 	//Sets the collision parameters of the ground + seiling body
 	fixedBody->SetCollide(true);
 	fixedBody->GetCollisionModel()->ClearModel();
-	ChVector<> hsize = 0.5 * ChVector<>(2*r_cyl_ext,1,2*r_cyl_ext);
-	
+	ChVector<> hsize = 0.5 * ChVector<>(2 * r_cyl_ext, 1, 2 * r_cyl_ext);
+
 	//Creation of the ground
 	auto box1 = std::make_shared<ChBoxShape>();
-	box1->GetBoxGeometry().Pos = ChVector<>(0,-0.5,0);
+	box1->GetBoxGeometry().Pos = ChVector<>(0, -0.5, 0);
 	box1->GetBoxGeometry().Size = hsize;
 	box1->SetColor(ChColor(1, 0, 0));
 	box1->SetFading(0.6f);
 	fixedBody->AddAsset(box1);
-	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0,-0.5,0));
-	
+	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, -0.5, 0));
+
 	//Creation of the seiling
 	auto box2 = std::make_shared<ChBoxShape>();
-	box2->GetBoxGeometry().Pos = ChVector<>(0, height+0.5, 0);
+	box2->GetBoxGeometry().Pos = ChVector<>(0, height + 0.5, 0);
 	box2->GetBoxGeometry().Size = hsize;
 	box2->SetColor(ChColor(1, 0, 0));
 	box2->SetFading(0.6f);
 	fixedBody->AddAsset(box2);
 
 	//End of settings the collision parameters of the ground + seiling body
-	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, height+0.5, 0));
+	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, height + 0.5, 0));
 	fixedBody->GetCollisionModel()->BuildModel();
-	
+
 	mphysicalSystem.AddBody(fixedBody);
-	
+
 	// Add the inner cylinder
 
-	auto rotatingBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(),ChMaterialSurface::SMC); 
+	auto rotatingBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 
 	rotatingBody->SetMass(10.0);
 	rotatingBody->SetInertiaXX(ChVector<>(50, 50, 50));
@@ -475,17 +475,16 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	rotatingBody->AddAsset(box);
 
 	mphysicalSystem.AddBody(rotatingBody);
-	
+
 	// optional, attach a texture for better visualization
 	auto mtexture = std::make_shared<ChTexture>();
 	mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
 	rotatingBody->AddAsset(mtexture);
-	
+
 	//creation of all the set-up
-	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list,p_ray);
-	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list,p_ray);
-	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true,p_ray);
-	printf("taille p_bead_list dans create : %i\n", p_beads_list->size());
+	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list, p_ray);
+	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list, p_ray);
+	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true, p_ray);
 }
 
 //Fills a ChVectorDynamic with the velocity of all the beads that are in the list pointed by p_beads_list
