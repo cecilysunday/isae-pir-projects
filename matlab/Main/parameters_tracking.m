@@ -17,12 +17,12 @@ e2 = 0;
 e3 = 0; 
 
 %a = semi-major axis of the intern ellipse 
-a = 555; %525
+a = 510; %525
 a2 = 0;
 a3 = 0;
  
 %width = width of the mask 
-width = 600;
+width = 460;
 width2 = 0; 
 width3 = 0;
 %--------------------------------------------------------------------------
@@ -65,8 +65,8 @@ width3 = 0;
 %Pour d�tecter beaucoup de particules sur une image, mettre la valeur � 0.
 %Pour d�tecter peu de particules, augmenter la valeur de ce param�tre
 
-blob_diam = 18;
-th = 10;%35
+blob_diam = 16;
+th = 15;%35
 sz = blob_diam; 
 sz2 = blob_diam + 3;
 brightn_tr = 300;

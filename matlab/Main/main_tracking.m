@@ -4,6 +4,9 @@ clear,clc
 
 addpath('matlab/Main');
 addpath('matlab/Parameters_tests');
+addpath('matlab/Parameters_tests/Repetabilite');
+addpath('matlab/Parameters_tests/Repet');
+addpath('matlab/Parameters_tests/Transitoire');
 addpath('matlab/PTV_algorithm');
 addpath('matlab/PTV_algorithm/1-acquisition');
 addpath('matlab/PTV_algorithm/2-mask');
@@ -22,6 +25,7 @@ addpath('matlab/PTV_algorithm/6-perspective_correction');
 %%
 parameters_tracking;
 data_mask = [x0,y0,a,width,e]; %parameters used for building a mask
+
 data_mask2 = [x02,y02,a2,width2,e2]; %parameters used for building another mask
 data_mask3 = [x03,y03,a3,width3,e3]; %parameters used for building another mask
 data = [blob_diam th sz sz2 brightn_tr]; %parameters used for detection
@@ -34,7 +38,7 @@ data_perspective = [fdivZ p_s];
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('matlab/data/nouveau_format/70Hz-Tracking'));
+set = imageSet(fullfile('matlab/data/experience/60Hz-transitoire-1'));
 %--------------------------------------------------------------------------
 %%
 %STEP 4: CREATION OF A MASK (go in parameters.m and set the mask parameters 
@@ -48,6 +52,7 @@ mask(set, data_mask);
 %parameters to the desired values. Make sure the detection is OK by 
 %detecting particles in the first image of the set and by printing all the 
 %detected particles in the image)
+
 
 %array = detect_particles(set, 1, data, 0);
 %display_particles(set, 1, data, array, 1, 1);
@@ -87,10 +92,10 @@ display_data_tracking(set, data_tracking);
 %%
 %TO DISPLAY ONLY ONE PARTICULAR COMPUTED TRACK:
 deltaT = 1;
-%display_track_nb(set, tr2, deltaT, 826);
+display_track_nb(set, tr4, deltaT, 632);
 
 %TO DISPLAY ALL THE COMPUTED TRACKS AT THE SAME TIME:
-display_tracks(set, tr, deltaT);
+%display_tracks(set, tr4, deltaT);
 %%
 %TO DISPLAY ALL THE COMPUTED TRACKS ONE AFTER THE OTHER:
 % sz = size(tr);
