@@ -153,7 +153,7 @@ void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius)
 }
 
 
-void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<> pos, double mass, bool isFixed, bool isWall, std::vector< std::shared_ptr< ChBody > >* p_list, int i=0, bool has_velocity = false) {
+void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<> pos, double mass, bool isFixed, bool isWall, std::vector< std::shared_ptr< ChBody > >* p_list, int i=0) {
 	ChQuaternion<> rot(1, 0, 0, 0);
 	ChVector<> init_vel(0, 0, 0);
 	
@@ -190,27 +190,18 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 
 	
 	auto text = std::make_shared<ChTexture>();
+	
 	if (isWall == true) {
-		text->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
-		
-		
-		
+		text->SetTextureFilename(GetChronoDataFile("greenwhite.png"));	
 	}
+
 	else {
 		text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
 		body->SetId(i);
+		p_list->push_back(body);
 	}
+	
 	body->AddAsset(text);
-	
-	
-	if (has_velocity == true) {
-		double vx = ChRandom()*10;
-		double vy = ChRandom() * 10;
-		double vz = ChRandom() * 10;
-		body->SetPos_dt(ChVector<>(vx, vy, vz));
-
-	}
-	p_list->push_back(body);
 	mphysicalSystem.AddBody(body);
 }
 
@@ -331,7 +322,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_i
 
 }
 
-void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_cylinder_ext_list, std::vector< std::shared_ptr< ChBody > >* p_cylinder_int_list, std::vector< std::shared_ptr< ChBody > >* p_beads_list, std::shared_ptr<ChLinkMotorRotationSpeed>* motor, std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius) {
+void set_up(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_cylinder_ext_list, std::vector< std::shared_ptr< ChBody > >* p_cylinder_int_list, std::vector< std::shared_ptr< ChBody > >* p_beads_list, double rotation_speed, std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius) {
 
 	//Création du sol
 	auto material = std::make_shared<ChMaterialSurfaceSMC>();
@@ -389,13 +380,13 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 
 	// .. a motor between mixer and truss
 
-	//auto my_motor = std::make_shared<ChLinkMotorRotationSpeed>();
-	(*motor)->Initialize(rotatingBody, fixedBody, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngAxis(CH_C_PI_2, VECT_X)));
-	auto mfun = std::make_shared<ChFunction_Const>(CH_C_PI/2.0);  // speed w=90°/s CH_C_PI / 2.0
+	auto my_motor = std::make_shared<ChLinkMotorRotationSpeed>();
+	my_motor->Initialize(rotatingBody, fixedBody, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngAxis(CH_C_PI_2, VECT_X)));
+	auto mfun = std::make_shared<ChFunction_Const>(rotation_speed);  // speed w=90°/s CH_C_PI / 2.0
 	//auto mfun = std::make_shared<ChFunction_Const>(0);
-	(*motor)->SetSpeedFunction(mfun);
+	my_motor->SetSpeedFunction(mfun);
 	//(*motor)->SetAvoidAngleDrift(0);
-	mphysicalSystem.AddLink(*motor);
+	mphysicalSystem.AddLink(my_motor);
 
 	// optional, attach a texture for better visualization
 	auto mtexture = std::make_shared<ChTexture>();
@@ -417,10 +408,9 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 
 }
 
-void create_array_velocity(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<double>* p_tab_v_r, ChVectorDynamic<double>* p_tab_v_t, ChVectorDynamic<double>* p_tab_r, ChVectorDynamic<double>* p_tab_theta, ChVectorDynamic<int>* p_tab_id,double height_bead, double r_bead) {
+void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface, double r_bead) {
 	
-	vector<std::shared_ptr<ChBody>> surface;
-	
+	p_surface->Reset();
 	
 	for (int i = 0; i<p_beads_list->size(); ++i) {
 		
@@ -440,38 +430,12 @@ void create_array_velocity(std::vector< std::shared_ptr< ChBody > >* p_beads_lis
 			}
 		}
 		if (au_dessus == false) {
-			surface.push_back((*p_beads_list)[i]);
+			p_surface->Resize(p_surface->GetLength() + 1);
+			p_surface->SetElementN(p_surface->GetLength()-1,(*p_beads_list)[i]);
+			
 			
 		}
 	
-	}
-	
-	
-	
-	p_tab_r->Reset(surface.size());
-	p_tab_v_r->Reset(surface.size());
-	p_tab_v_t->Reset(surface.size());
-	p_tab_theta->Reset(surface.size());
-	p_tab_id->Reset(surface.size());
-	
-	for (int i = 0; i < surface.size(); ++i) {
-		double v_x= surface[i]->GetPos_dt().x();
-		double v_z = surface[i]->GetPos_dt().z();
-		double theta = atan2(surface[i]->GetPos().z(),surface[i]->GetPos().x());
-		//printf("v : %f\n", sqrt(v_x*v_x+v_z*v_z));
-		
-		
-		double r = sqrt(surface[i]->GetPos().x()*surface[i]->GetPos().x() + surface[i]->GetPos().z()*surface[i]->GetPos().z());
-		double v_r = v_x * cos(theta) + v_z * sin(theta);
-		double v_t = v_z * cos(theta) - v_x * sin(theta);
-		
-		p_tab_r->SetElementN(i, r);
-		p_tab_v_r->SetElementN(i, v_r);
-		p_tab_v_t->SetElementN(i, v_t);
-		p_tab_theta->SetElementN(i, theta);
-		p_tab_id->SetElementN(i, surface[i]->GetId());
-		
-
 	}
 	
 }
@@ -496,25 +460,6 @@ bool is_in_mouvement(std::vector< std::shared_ptr< ChBody > >* p_beads_list) {//
 	return (!(mean_v-1.0<0.0001 && mean_v-1.0>-0.0001) );
 }
 
-void vel_by_radius(ChVectorDynamic<double>* p_tab_vel_r, ChVectorDynamic<double>* p_tab_vel_t, ChVectorDynamic<double>* p_r, ChVectorDynamic<double>* p_mean__v_r, ChVectorDynamic<double>* p_mean_v_t, double r_cyl_int, double r_bead, double r_cyl_ext) {
-	ChVectorDynamic<double> tab_v_r_loc;
-	ChVectorDynamic<double> tab_v_t_loc;
-	for (int i = 0; i < floor(r_cyl_ext - r_cyl_int / (2 * r_bead)); i++) {
-		double r_considere = r_cyl_int + r_bead + 2 * i*r_bead;
-		tab_v_r_loc.Reset();
-		tab_v_t_loc.Reset();
-		double s_v_r_loc=0;
-		double s_v_t_loc=0;
-		int c = 0;
-		for (int j = 0; j < p_tab_vel_t->GetLength(); j++) {
-			if (p_r->GetElementN(j) - r_considere - r_bead < 0.001 && p_r->GetElementN(j) - r_considere - r_bead < -0.001) {
-				s_v_r_loc = s_v_r_loc + p_tab_vel_r->GetElementN(i);
-				s_v_t_loc = s_v_t_loc + p_tab_vel_t->GetElementN(i);
-				c = c + 1;
-			}
-		}
-	}
-}
 
 void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, double z_cam) {
 	// Modify the default light and camera
@@ -639,42 +584,24 @@ int main(int argc, char* argv[]) {
 	p_list_radius = &list_radius;
 
 	read_pos(p_list_position,p_list_radius);
-	create_some_falling_items(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list, p_beads_list, motor, p_list_position,p_list_radius);
+	set_up(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list, p_beads_list, rotation_speed, p_list_position,p_list_radius);
+	 
+	ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface(0);
+	ChVectorDynamic<std::shared_ptr<ChBody>> surface = ChVectorDynamic<std::shared_ptr<ChBody>>(0);
+	p_surface = &surface;
 
-	ChVectorDynamic<double>* p_tab_vel_r(0);
-	ChVectorDynamic<double> tab_vel_r = ChVectorDynamic<double>(0);
-	p_tab_vel_r = &tab_vel_r;
-
-	ChVectorDynamic<double>* p_tab_vel_t(0);
-	ChVectorDynamic<double> tab_vel_t = ChVectorDynamic<double>(0);
-	p_tab_vel_t = &tab_vel_t;
-
-	ChVectorDynamic<double>* p_tab_r(0);
-	ChVectorDynamic<double> tab_r = ChVectorDynamic<double>(0);
-	p_tab_r = &tab_r;
-
-	ChVectorDynamic<double>* p_tab_theta(0);
-	ChVectorDynamic<double> tab_theta = ChVectorDynamic<double>(0);
-	p_tab_theta = &tab_theta;
-
-	ChVectorDynamic<int>* p_tab_id(0);
-	ChVectorDynamic<int> tab_id = ChVectorDynamic<int>(0);
-	p_tab_id = &tab_id;
-
-	create_array_velocity(p_beads_list, p_tab_vel_r, p_tab_vel_t, p_tab_r, p_tab_theta, p_tab_id, height_bead, r_bead);
-
-
-
-	std::string filename = "graphes.gpl";
-	ChGnuPlot mplot(filename.c_str());
-	mplot.SetGrid();
+	detect_surface(p_beads_list,p_surface, r_bead);
 
 	// create a .dat file with three columns of demo data:
-	std::string datafile = "test_gnuplot_data.dat";
-	ChStreamOutAsciiFile mdatafile(datafile.c_str());
+	std::string datafile = out_dir + "/velocity_profile.dat";
+	ChStreamOutAsciiFile velocity_profile(datafile.c_str());
 
+	std::string datafile2 = out_dir + "/all_data_surface.dat";
+	ChStreamOutAsciiFile all_data_surface(datafile2.c_str());
 	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead / 2);
 
+	velocity_profile << "0" << " " << "0" << " " << "id_frame" << " " << "id_part" << " " << "v_r" << " " << "v_t" << " " << "r" << "\n";
+	all_data_surface << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
 	// Use this function for adding a ChIrrNodeAsset to all items
 	// Otherwise use application.AssetBind(myitem); on a per-item basis.
 #ifdef CHRONO_IRRLICHT
@@ -700,11 +627,24 @@ int main(int argc, char* argv[]) {
 		application.GetDevice()->run();
 		application.DrawAll();
 #endif
-		create_array_velocity(p_beads_list, p_tab_vel_r, p_tab_vel_t, p_tab_r, p_tab_theta, p_tab_id, height_bead, r_bead);
 		
+		detect_surface(p_beads_list, p_surface, r_bead);
+		
+		for (int j = 0; j < p_surface->GetLength(); j++) {
+			double v_x = p_surface->GetElementN(j)->GetPos_dt().x();
+			double v_y = p_surface->GetElementN(j)->GetPos_dt().y();
+			double v_z = p_surface->GetElementN(j)->GetPos_dt().z();
+			double x = p_surface->GetElementN(j)->GetPos().x();
+			double y = p_surface->GetElementN(j)->GetPos().y();
+			double z = p_surface->GetElementN(j)->GetPos().z();
+			double theta = atan2(z, x);
+			double r = sqrt(x*x +z*z);
+			double v_r = v_x * cos(theta) + v_z * sin(theta);
+			double v_t = v_z * cos(theta) - v_x * sin(theta);
+			int id = p_surface->GetElementN->GetIdentifier();
 
-		for (int j = 0; j < p_tab_vel_r->GetLength(); j++) {
-			mdatafile << 0 << ", " << 0 << "," << id_frame << "," << p_tab_id->GetElementN(j) << "," << p_tab_vel_r->GetElementN(j) << ", " << p_tab_vel_t->GetElementN(j) << "," << p_tab_r->GetElementN(j) << "\n";
+			velocity_profile << 0 << " " << 0 << " " << id_frame << " " << id << " " << v_r << " " << v_t << " " <<r << "\n";
+			all_data_surface << id << " " << x << " " << y << " " << z << " " << v_x << " " << v_y << " " << v_z << " " << "\n";
 		}
 
 		id_frame = id_frame + 1;
@@ -723,63 +663,3 @@ int main(int argc, char* argv[]) {
 	}
 	return 0;
 }
-/*#ifdef IRRLICHT
-	while (application.GetDevice()->run()) {
-		application.BeginScene();
-		ChIrrTools::drawSegment(application.GetVideoDriver(), ChVector<>(0, -100, 0), ChVector<>(0, 100, 0), irr::video::SColor(255, 0, 0, 0), true);
-		ChIrrTools::drawGrid(application.GetVideoDriver(), 0.2, 0.2, 20, 20,
-			ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngX(CH_C_PI_2)),
-			video::SColor(255, 80, 100, 100), true);
-		application.DrawAll();
-		
-		std::string time_s = "time : " +std::to_string(time);
-		char *cstr = new char[time_s.length() + 1];
-		time_s.copy(cstr, time_s.length());
-		cstr[time_s.length()] = '\0';
-		strcpy(cstr, time_s.c_str());
-		printf("time :%f\n", time);
-		
-		if (time > 0.5 && motor_launched==false) {
-			in_mouvement = is_in_mouvement(p_beads_list);
-			
-		}
-
-		if (in_mouvement==false && motor_launched==false) {
-			
-			auto mfun = std::make_shared<ChFunction_Const>(rotation_speed);  
-			(*motor)->SetSpeedFunction(mfun);
-			motor_launched = true;
-
-		}
-		//printf("On arrive ici : %i\n", mphysicalSystem.Get_bodylist().size());
-		//mphysicalSystem.RemoveBody(mphysicalSystem.Get_bodylist()[mphysicalSystem.Get_bodylist().size()-1]);
-
-		if (motor_launched == true && (time - i<0.001 && time - i>-0.001)) {
-			printf("on cree les graphes\n");
-			create_array_velocity(p_beads_list, p_tab_vel_r, p_tab_vel_t, p_tab_r, p_tab_theta,p_tab_id, height_bead, r_bead);
-			//mplot.Plot(*p_tab_r, *p_tab_vel_t, cstr, "with points");
-			
-			for (int j = 0; j < p_tab_vel_r->GetLength(); j++) {
-				mdatafile << 0 << ", " << 0 << "," << id_frame << "," << p_tab_id->GetElementN(j) << "," << p_tab_vel_r->GetElementN(j) << ", " << p_tab_vel_t->GetElementN(j) << "," << p_tab_r->GetElementN(j) << "\n";
-			}
-			id_frame = id_frame + 1;
-		}
-
-		if (time - i<0.001 && time - i>-0.001) {
-			i = i + 0.5;
-			printf("i : %f\n", i);
-		}
-
-		while (time < out_time) {
-			mphysicalSystem.DoStepDynamics(time_step);
-			time += time_step;
-		}
-		out_time += out_step;
-
-		application.EndScene();
-	}
-#endif
-	
-	return 0;
-}
-*/

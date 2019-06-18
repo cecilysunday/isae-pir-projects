@@ -109,8 +109,6 @@ std::string SetDataPath(std::string projname, bool archive) {
 	return out_dir;
 }
 
-
-
 int SetPovrayPaths(ChPovRay* pov_exporter, const std::string out_dir) {
 	// Sets some file names for in-out processes
 	pov_exporter->SetTemplateFile(GetChronoDataFile("_template_POV.pov"));
@@ -705,44 +703,3 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-	/*while (application.GetDevice()->run()) {
-		application.BeginScene();
-		ChIrrTools::drawSegment(application.GetVideoDriver(), ChVector<>(0, -100, 0), ChVector<>(0, 100, 0), irr::video::SColor(255, 0, 0, 0), true);
-		ChIrrTools::drawGrid(application.GetVideoDriver(), 0.2, 0.2, 20, 20,
-			ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngX(CH_C_PI_2)),
-			video::SColor(255, 80, 100, 100), true);
-		application.DrawAll();
-		
-		printf("time :%f\n", time);
-		create_array_velocity(p_beads_list, p_tab_v);
-		printf("moyenne v : %f\n", mean_vector(p_tab_v));		
-		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
-		
-		
-		if (mean_vector(p_tab_v) < 0.001 && in_mouvement==true) {
-			in_mouvement = false;
-			if (position) {
-				for (int j = 0; j < p_beads_list->size(); j++) {
-					position << (*p_beads_list)[j]->GetPos().x() << " " << (*p_beads_list)[j]->GetPos().y() << " " << (*p_beads_list)[j]->GetPos().z() << "\n";
-				}
-				position << -100000000 << " " << -100000000 << " " << -100000000 << "\n";
-				position.close();
-			}
-			printf("Les positions ont bien ete enregistrees\n");
-		}
-		
-
-
-		while (time < out_time) {
-			mphysicalSystem.DoStepDynamics(time_step);
-			time += time_step;
-		}
-		out_time += out_step;
-
-		application.EndScene();
-	}
-	
-	
-	return 0;
-}
-*/
