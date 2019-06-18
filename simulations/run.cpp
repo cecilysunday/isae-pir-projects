@@ -83,8 +83,8 @@ std::string SetDataPath(std::string projname, bool archive) {
 		return "";
 	}
 	else {
-		fflush(stdout);
-		freopen(out_dir_log.c_str(), "w", stdout);
+		//fflush(stdout);
+		//freopen(out_dir_log.c_str(), "w", stdout);
 	}
 
 	chrono::GetLog() << "\IM HERE 3";
@@ -125,9 +125,11 @@ int SetPovrayPaths(ChPovRay* pov_exporter, const std::string out_dir) {
 }
 
 //Read the position in a given file, and stock it into the list pointed by p_list_pos
-void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius) {
+void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius, const std::string out_dir) {
+	
 	printf("On arrive avant de lire le fichier\n");
-	std::ifstream fichier("C:/Users/jules/Documents/PIR/Simulations/Test5_build/bin/Release/position.dat");
+	std::ifstream fichier(out_dir + "/position.dat");
+	//std::ifstream fichier( out_dir + "/../TEMP_set/position.dat");
 	printf("On passe la lecture du fichier\n");
 	int i = 0;
 	bool end_of_doc = false;
@@ -135,9 +137,10 @@ void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius)
 	double y;
 	double z;
 	double radius;
+	
 	while (end_of_doc==false){
 		
-		fichier >> x >> y>> z;
+		fichier >> x >> y>> z >> radius;
 		printf("(%f,%f,%f)", x, y, z);
 		if (x != -100000000 && y != -100000000 && z != -100000000 && radius != -100000000) {
 			p_list_pos->push_back(ChVector<>(x, y, z));
@@ -411,7 +414,10 @@ void set_up(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl
 void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface, double r_bead) {
 	
 	p_surface->Reset();
-	
+	p_surface->Resize(0);
+	ChVectorDynamic<std::shared_ptr<ChBody>> list_surf;
+	int nb_bille_surf = 0;
+	list_surf.Resize(p_beads_list->size());
 	for (int i = 0; i<p_beads_list->size(); ++i) {
 		
 		
@@ -430,12 +436,17 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 			}
 		}
 		if (au_dessus == false) {
-			p_surface->Resize(p_surface->GetLength() + 1);
-			p_surface->SetElementN(p_surface->GetLength()-1,(*p_beads_list)[i]);
+			
+			list_surf.SetElementN(nb_bille_surf,(*p_beads_list)[i]);
+			nb_bille_surf = nb_bille_surf + 1;
 			
 			
 		}
+	}
 	
+	p_surface->Resize(nb_bille_surf);
+	for (int i = 0; i < nb_bille_surf; i++) {
+		p_surface->SetElementN(i, list_surf.GetElementN(i));
 	}
 	
 }
@@ -489,8 +500,6 @@ int main(int argc, char* argv[]) {
 	
 	GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
-
-
 	//Déclaration des paramètres
 	double gravity = -9.81;
 	double r_bead = 1;
@@ -500,8 +509,8 @@ int main(int argc, char* argv[]) {
 	double height_bead = 10;
 	double mass = 1;
 	double rotation_speed = CH_C_PI / 2.0;
-
-	std::ifstream fichier("C:/Users/jules/Documents/CH_C_PIR/Simulations/Test5_build/bin/Release/settings.dat");
+	std::string path=  out_dir + "/../20190618_154239_set";
+	std::ifstream fichier(path +"/settings.dat");
 	fichier >> gravity >> r_bead>> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 	//Paramètres de simulation
 	double time_step = 1e-4;//1e-4
@@ -582,8 +591,8 @@ int main(int argc, char* argv[]) {
 	std::vector< double> list_radius;
 	std::vector<double>* p_list_radius(0);
 	p_list_radius = &list_radius;
-
-	read_pos(p_list_position,p_list_radius);
+	
+	read_pos(p_list_position,p_list_radius, path);
 	set_up(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list, p_beads_list, rotation_speed, p_list_position,p_list_radius);
 	 
 	ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface(0);
@@ -591,7 +600,7 @@ int main(int argc, char* argv[]) {
 	p_surface = &surface;
 
 	detect_surface(p_beads_list,p_surface, r_bead);
-
+	
 	// create a .dat file with three columns of demo data:
 	std::string datafile = out_dir + "/velocity_profile.dat";
 	ChStreamOutAsciiFile velocity_profile(datafile.c_str());
@@ -599,7 +608,7 @@ int main(int argc, char* argv[]) {
 	std::string datafile2 = out_dir + "/all_data_surface.dat";
 	ChStreamOutAsciiFile all_data_surface(datafile2.c_str());
 	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead / 2);
-
+	
 	velocity_profile << "0" << " " << "0" << " " << "id_frame" << " " << "id_part" << " " << "v_r" << " " << "v_t" << " " << "r" << "\n";
 	all_data_surface << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
 	// Use this function for adding a ChIrrNodeAsset to all items
@@ -631,7 +640,14 @@ int main(int argc, char* argv[]) {
 		detect_surface(p_beads_list, p_surface, r_bead);
 		
 		for (int j = 0; j < p_surface->GetLength(); j++) {
+			printf("taille surface : %i\n", p_surface->GetLength());
+			std::shared_ptr<ChBody> p_body = p_surface->GetElementN(j);
+			ChVector<> vitesse =p_body->GetPos();
+			double test = vitesse.x();
+			printf("on arrive la\n");
+			printf("on arrive la : %f\n",test);
 			double v_x = p_surface->GetElementN(j)->GetPos_dt().x();
+			
 			double v_y = p_surface->GetElementN(j)->GetPos_dt().y();
 			double v_z = p_surface->GetElementN(j)->GetPos_dt().z();
 			double x = p_surface->GetElementN(j)->GetPos().x();
@@ -641,12 +657,12 @@ int main(int argc, char* argv[]) {
 			double r = sqrt(x*x +z*z);
 			double v_r = v_x * cos(theta) + v_z * sin(theta);
 			double v_t = v_z * cos(theta) - v_x * sin(theta);
-			int id = p_surface->GetElementN->GetIdentifier();
-
+			int id = p_surface->GetElementN(j)->GetIdentifier();
+			
 			velocity_profile << 0 << " " << 0 << " " << id_frame << " " << id << " " << v_r << " " << v_t << " " <<r << "\n";
 			all_data_surface << id << " " << x << " " << y << " " << z << " " << v_x << " " << v_y << " " << v_z << " " << "\n";
 		}
-
+		
 		id_frame = id_frame + 1;
 		while (time == 0 || time < out_time) {
 			mphysicalSystem.DoStepDynamics(time_step);

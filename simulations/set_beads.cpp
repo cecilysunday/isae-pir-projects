@@ -348,11 +348,11 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 	if (methode == 1) {//Column arrangement
 		
 		for (int k = 0; k < floor(((r_cyl_ext-r_bead) - (r_cyl_int+r_bead)) / (2*r_bead))-1; k++) {
-			for (int j = 0; j < floor(height_bead / (2 * r_bead)); j = j + 2) {
+			for (int j = 0; j < floor(height_bead / ( r_bead)); j = j + 2) {
 				for (int i = 0; i < floor((CH_C_PI*(r_cyl_int + 3 * r_bead + 2 * k*r_bead)) / r_bead) ; i++) {
 					
 					//Calculation of positions of all the beads
-					ChVector <> pos = ChVector<>((r_cyl_int+3*r_bead+2*k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), r_bead  * j + r_bead+2*height_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
+					ChVector <> pos = ChVector<>((r_cyl_int+3*r_bead+2*k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), r_bead  * j + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,p_ray,id, has_velocity);
 					id = id + 1;
 				}
@@ -483,7 +483,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	//creation of all the set-up
 	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list,p_ray);
 	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list,p_ray);
-	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list, true,p_ray);
+	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true,p_ray);
 }
 
 //Fills a ChVectorDynamic with the velocity of all the beads that are in the list pointed by p_beads_list
@@ -632,7 +632,7 @@ int main(int argc, char* argv[]) {
 	std::string datafile2 = out_dir + "/position.dat";
 	//ChStreamOutAsciiFile position(datafile2.c_str());
 	std::ofstream position(datafile2, std::ios::out | std::ios::trunc);
-	position << "x" << " " << "y" << " " << "z" << " " << "radius" << "\n";
+	//position << "x" << " " << "y" << " " << "z" << " " << "radius" << "\n";
 	// Create an exporter to POVray and set all associated filepaths and settings 
 	ChPovRay pov_exporter = ChPovRay(&mphysicalSystem);
 	if (SetPovrayPaths(&pov_exporter, out_dir) != 0) {
