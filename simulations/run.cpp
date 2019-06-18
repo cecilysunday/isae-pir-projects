@@ -501,14 +501,15 @@ int main(int argc, char* argv[]) {
 	GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
 	//Déclaration des paramètres
-	double gravity = -9.81;
-	double r_bead = 1;
+	double gravity = -9.81E2;
+	double r_bead =0.4;
 	double r_cyl_ext = 10;
-	double r_cyl_int = 2;
-	double height = 10;
-	double height_bead = 10;
-	double mass = 1;
-	double rotation_speed = CH_C_PI / 2.0;
+	double r_cyl_int = 5;
+	double height = 5;
+	double height_bead = 5;
+	double rho = 2.55;
+	double mass = rho*(4/3)*CH_C_PI*pow(r_bead,3);
+	double rotation_speed =0.09;
 	std::string path=  out_dir + "/../20190618_154239_set";
 	std::ifstream fichier(path +"/settings.dat");
 	fichier >> gravity >> r_bead>> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;

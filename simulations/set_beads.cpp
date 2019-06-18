@@ -354,6 +354,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 					//Calculation of positions of all the beads
 					ChVector <> pos = ChVector<>((r_cyl_int+3*r_bead+2*k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), r_bead  * j + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,p_ray,id, has_velocity);
+					
 					id = id + 1;
 				}
 			}
@@ -484,6 +485,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list,p_ray);
 	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list,p_ray);
 	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true,p_ray);
+	printf("taille p_bead_list dans create : %i\n", p_beads_list->size());
 }
 
 //Fills a ChVectorDynamic with the velocity of all the beads that are in the list pointed by p_beads_list
@@ -537,14 +539,15 @@ int main(int argc, char* argv[]) {
 	GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
 	//Déclaration des paramètres
-	double gravity = -9.81;
-	double r_bead = 1;
-	double r_cyl_ext =10 ;
-	double r_cyl_int = 2;
-	double height = 10;
-	double height_bead = 8;
-	double mass = 1;
-	double rotation_speed = CH_C_PI / 2.0;
+	double gravity = -9.81E2;
+	double r_bead = 0.2;
+	double r_cyl_ext = 10;
+	double r_cyl_int = 5;
+	double height = 5;
+	double height_bead = 5;
+	double rho = 2.55;
+	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
+	
 	//Paramètres de simulation
 	double time_step = 1e-4;//1e-4
 	double out_step = 0.02;
@@ -609,13 +612,13 @@ int main(int argc, char* argv[]) {
 	std::vector< std::shared_ptr< ChBody > > beads_list;
 	std::vector< std::shared_ptr< ChBody > >* p_beads_list(0);
 	p_beads_list = &beads_list;
-
+	
 	std::vector< double> radius_list;
 	std::vector< double >* p_radius_list(0);
 	p_radius_list = &radius_list;
 	
 	create_some_falling_items(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list,p_beads_list, motor,p_radius_list);
-
+	printf("nombre de billes : %i\n", p_beads_list->size());
 	ChVectorDynamic<double>* p_tab_v_cyl_int(0);
 	ChVectorDynamic<double> tab_v_cyl_int = ChVectorDynamic<double>(0);
 	p_tab_v_cyl_int = &tab_v_cyl_int;
