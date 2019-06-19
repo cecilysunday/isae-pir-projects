@@ -488,7 +488,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
 	bool dontcare = true;
-	std::string projname = "tc_run";
+	std::string projname = "_tc_run";
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
 
@@ -501,7 +501,7 @@ int main(int argc, char* argv[]) {
 
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
-	double r_bead =0.4;
+	double r_bead =0.2;
 	double r_cyl_ext = 10;
 	double r_cyl_int = 5;
 	double height = 5;

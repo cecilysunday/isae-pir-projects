@@ -527,7 +527,7 @@ int main(int argc, char* argv[]) {
 
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
-	double r_bead = 0.5;
+	double r_bead = 0.2;
 	double r_cyl_ext = 10;
 	double r_cyl_int = 5;
 	double height = 5;
