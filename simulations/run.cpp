@@ -16,15 +16,17 @@
 //
 // =============================================================================
 
-
+#include "chrono/ChConfig.h"
 #include "chrono/physics/ChBody.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
 
-#ifdef CHRONO_IRRLICHT
-#include <irrlicht.h>
-#include "chrono_irrlicht/ChIrrApp.h"
-#endif
+/*#ifdef CHRONO_IRRLICHT
+	#include <irrlicht.h>
+	#include "chrono_irrlicht/ChIrrApp.h"
+#endif*/
 
 #include "chrono/assets/ChTexture.h"
 #include <chrono_postprocess/ChGnuPlot.h>
@@ -38,7 +40,10 @@ using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
 
-#ifdef  CHRONO_IRRLICHT
+/*#ifdef CHRONO_IRRLICHT
+
+#include <irrlicht.h>
+#include "chrono_irrlicht/ChIrrApp.h"
 using namespace chrono::irrlicht;
 
 // Use the main namespaces of Irrlicht
@@ -48,7 +53,7 @@ using namespace irr::scene;
 using namespace irr::video;
 using namespace irr::io;
 using namespace irr::gui; 
-#endif
+#endif*/
 //using namespace std;
 
 std::string SetDataPath(std::string projname, bool archive) {
@@ -550,7 +555,7 @@ int main(int argc, char* argv[]) {
 	SetPovrayParameters(&pov_exporter, 0, 30, 0);
 	// Create the Irrlicht visualization (open the Irrlicht device,
 	// bind a simple user interface, etc. etc.)
-#ifdef CHRONO_IRRLICHT
+/*#ifdef CHRONO_IRRLICHT
 	ChIrrApp application(&mphysicalSystem, L"Collisions between objects", core::dimension2d<u32>(800, 600), false, true);
 
 	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
@@ -558,7 +563,7 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
 	ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 30, 0));
-#endif
+#endif*/
 	
 
 
@@ -609,12 +614,12 @@ int main(int argc, char* argv[]) {
 	all_data_surface << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
 	// Use this function for adding a ChIrrNodeAsset to all items
 	// Otherwise use application.AssetBind(myitem); on a per-item basis.
-#ifdef CHRONO_IRRLICHT
+/*#ifdef CHRONO_IRRLICHT
 	application.AssetBindAll();
 
 	// Use this function for 'converting' assets into Irrlicht meshes
 	application.AssetUpdateAll();
-#endif
+#endif*/
 
 	//
 	// THE SOFT-REAL-TIME CYCLE
@@ -625,11 +630,11 @@ int main(int argc, char* argv[]) {
 
 	while (time < time_sim) {
 
-#ifdef CHRONO_IRRLICHT
+/*#ifdef CHRONO_IRRLICHT
 		application.BeginScene(true, true, SColor(255, 255, 255, 255));
 		application.GetDevice()->run();
 		application.DrawAll();
-#endif
+#endif*/
 		
 		detect_surface(p_beads_list, p_surface, r_bead);
 		
@@ -665,9 +670,9 @@ int main(int argc, char* argv[]) {
 
 		pov_exporter.ExportData();
 
-#ifdef CHRONO_IRRLICHT
+/*#ifdef CHRONO_IRRLICHT
 		application.EndScene();
-#endif
+#endif*/
 
 		out_time = time - time_step + out_step;
 	}

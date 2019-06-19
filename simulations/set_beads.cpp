@@ -16,9 +16,11 @@
 //
 // =============================================================================
 
-
+#include "chrono/ChConfig.h"
 #include "chrono/physics/ChBody.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
 
 #ifdef CHRONO_IRRLICHT
@@ -137,10 +139,8 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	material->SetAdhesion(0);
 
 	//Creation of the beads and setting on parameters
-	auto body = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(),ChMaterialSurface::SMC);
+	auto body = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 	body->SetMass(mass);
-
-
 	body->SetPos(pos);
 	body->SetRot(rot);
 	body->SetPos_dt(init_vel);
@@ -152,6 +152,9 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	else {
 		body->SetBodyFixed(false);
 	}
+	body->SetMaterialSurface(material);
+	body->SetCollide(true);
+
 	
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator(seed);
@@ -648,11 +651,11 @@ int main(int argc, char* argv[]) {
 	double time_sim = 10.0;
 	while (time<time_sim) {
 
-#ifdef CHRONO_IRRLICHT
+/*#ifdef CHRONO_IRRLICHT
 		application.BeginScene(true, true, SColor(255, 255, 255, 255));
 		application.GetDevice()->run();
 		application.DrawAll();
-#endif
+#endif*/
 
 		while (time == 0 || time < out_time) {
 			
