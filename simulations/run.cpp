@@ -9,21 +9,23 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Alessandro Tasora
+// Authors: Jules Marti
 // =============================================================================
 //
-// Demo code about
-//     - collisions and contacts
-//     - using Irrlicht to display objects.
+// Run the simulations with beads at positions specified by a given file. Write data of the surface in given files. 
 //
 // =============================================================================
 
-//#include "chrono/ChConfig.h"
+
 #include "chrono/physics/ChBody.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
+
+#ifdef CHRONO_IRRLICHT
 #include <irrlicht.h>
 #include "chrono_irrlicht/ChIrrApp.h"
+#endif
+
 #include "chrono/assets/ChTexture.h"
 #include <chrono_postprocess/ChGnuPlot.h>
 #include "chrono_postprocess/ChPovRay.h"
@@ -32,13 +34,10 @@
 #include <iomanip>
 #include "chrono_thirdparty/filesystem/path.h"
 
-//#include <cstdio>
-//#include <vector>
-//#include <cmath>
-
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
+
 #ifdef  CHRONO_IRRLICHT
 using namespace chrono::irrlicht;
 
@@ -489,7 +488,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
 	bool dontcare = true;
-	std::string projname = "_run";
+	std::string projname = "tc_run";
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
 
@@ -527,9 +526,6 @@ int main(int argc, char* argv[]) {
 
 	// Create a ChronoENGINE physical system
 	ChSystemParallelSMC mphysicalSystem;
-	/*mphysicalSystem.GetSettings()->solver.contact_force_model = ChSystemSMC::ContactForceModel::Hertz;
-	//mphysicalSystem.SetContactForceModel(ChSystemParallelSMC::ContactForceModel::Hertz);
-	mphysicalSystem.SetAdhesionForceModel(ChSystemParallelSMC::AdhesionForceModel::Constant);*/
 	mphysicalSystem.GetSettings()->solver.max_iteration_bilateral = 100;
 	mphysicalSystem.GetSettings()->solver.tolerance = 1e-3;
 
@@ -556,7 +552,6 @@ int main(int argc, char* argv[]) {
 	// bind a simple user interface, etc. etc.)
 #ifdef CHRONO_IRRLICHT
 	ChIrrApp application(&mphysicalSystem, L"Collisions between objects", core::dimension2d<u32>(800, 600), false, true);
-	//ChIrrApp application(&mphysicalSystem, L"ChLinkLockPlanePlane", irr::core::dimension2d<irr::u32>(800, 600), false, true);
 
 	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
@@ -564,7 +559,7 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
 	ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 30, 0));
 #endif
-	//application.AddTypicalCamera(irr::core::vector3df(300, 0, 300));
+	
 
 
 
@@ -620,8 +615,6 @@ int main(int argc, char* argv[]) {
 	// Use this function for 'converting' assets into Irrlicht meshes
 	application.AssetUpdateAll();
 #endif
-	//application.SetStepManage(true);
-	//application.SetTimestep(0.02);
 
 	//
 	// THE SOFT-REAL-TIME CYCLE

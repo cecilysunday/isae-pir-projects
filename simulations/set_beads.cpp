@@ -9,21 +9,23 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Alessandro Tasora
+// Authors: Jules Marti
 // =============================================================================
 //
-// Demo code about
-//     - collisions and contacts
-//     - using Irrlicht to display objects.
+// Set the beads with random velocity, then wait until they are immobile. Store the positions in a given file. 
 //
 // =============================================================================
 
-//#include "chrono/ChConfig.h"
+
 #include "chrono/physics/ChBody.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
+
+#ifdef CHRONO_IRRLICHT
 #include <irrlicht.h>
 #include "chrono_irrlicht/ChIrrApp.h"
+#endif
+
 #include "chrono/assets/ChTexture.h"
 #include <chrono_postprocess/ChGnuPlot.h>
 #include "chrono_postprocess/ChPovRay.h"
@@ -32,30 +34,16 @@
 #include <ctime>        
 #include <iomanip>
 #include <random>
-/*#include "chrono/physics/ChBody.h"
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono/physics/ChLinkMotorRotationSpeed.h"
-#include <irrlicht.h>
-#include "chrono_irrlicht/ChIrrApp.h"
-#include "chrono_postprocess/ChPovRay.h"
-#include "chrono_postprocess/ChPovRayAssetCustom.h"
-#include "chrono/assets/ChTexture.h"
-#include <chrono_postprocess/ChGnuPlot.h>
-#include <random>
-#include "chrono_thirdparty/filesystem/path.h"
-#include <ctime>        
-#include <iomanip>
-//#include <cstdio>
-//#include <vector>
-//#include <cmath>*/
+
 
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
-using namespace chrono::irrlicht;
+
 
 #ifdef CHRONO_IRRLICHT
 // Use the main namespaces of Irrlicht
+using namespace chrono::irrlicht;
 using namespace irr;
 using namespace irr::core;
 using namespace irr::scene;
@@ -63,7 +51,7 @@ using namespace irr::video;
 using namespace irr::io;
 using namespace irr::gui;
 #endif
-//using namespace std;
+
 
 std::string SetDataPath(std::string projname, bool archive) {
 	// Create a timestamped string to use when creating new data output path
@@ -484,7 +472,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	//creation of all the set-up
 	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list, p_ray);
 	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list, p_ray);
-	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true, p_ray);
+	//remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true, p_ray);
 }
 
 //Fills a ChVectorDynamic with the velocity of all the beads that are in the list pointed by p_beads_list
@@ -526,8 +514,8 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x, double y, double z) {
 
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
-	bool dontcare = false;
-	std::string projname = "_set";
+	bool dontcare = true;
+	std::string projname = "_tc_set";
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
 
@@ -539,7 +527,7 @@ int main(int argc, char* argv[]) {
 
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
-	double r_bead = 0.2;
+	double r_bead = 0.5;
 	double r_cyl_ext = 10;
 	double r_cyl_int = 5;
 	double height = 5;
@@ -562,9 +550,6 @@ int main(int argc, char* argv[]) {
 
 	// Create a ChronoENGINE physical system
 	ChSystemParallelSMC mphysicalSystem;
-	/*mphysicalSystem.GetSettings()->solver.contact_force_model = ChSystemSMC::ContactForceModel::Hertz;
-	//mphysicalSystem.SetContactForceModel(ChSystemParallelSMC::ContactForceModel::Hertz);
-	mphysicalSystem.SetAdhesionForceModel(ChSystemParallelSMC::AdhesionForceModel::Constant);*/
 	mphysicalSystem.GetSettings()->solver.max_iteration_bilateral = 100;
 	mphysicalSystem.GetSettings()->solver.tolerance = 1e-3;
 
@@ -584,14 +569,14 @@ int main(int argc, char* argv[]) {
 	// Create the Irrlicht visualization (open the Irrlicht device,
 	// bind a simple user interface, etc. etc.)
 	ChIrrApp application(&mphysicalSystem, L"Collisions between objects", core::dimension2d<u32>(800, 600), false, true);
-	//ChIrrApp application(&mphysicalSystem, L"ChLinkLockPlanePlane", irr::core::dimension2d<irr::u32>(800, 600), false, true);
+
 
 	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
-	ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(30, 0, 0));
-	//application.AddTypicalCamera(irr::core::vector3df(300, 0, 300));
+	ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 0, 30));
+
 	
 #endif
 
@@ -632,7 +617,6 @@ int main(int argc, char* argv[]) {
 	mean_v << "time" << " " << "mean_v" << "\n";
 
 	std::string datafile2 = out_dir + "/position.dat";
-	//ChStreamOutAsciiFile position(datafile2.c_str());
 	std::ofstream position(datafile2, std::ios::out | std::ios::trunc);
 	//position << "x" << " " << "y" << " " << "z" << " " << "radius" << "\n";
 	// Create an exporter to POVray and set all associated filepaths and settings 
@@ -653,8 +637,7 @@ int main(int argc, char* argv[]) {
 
 	// Use this function for 'converting' assets into Irrlicht meshes
 	application.AssetUpdateAll();
-	//application.SetStepManage(true);
-	//application.SetTimestep(0.02);
+
 #endif
 	//
 	// THE SOFT-REAL-TIME CYCLE
