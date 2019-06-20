@@ -33,6 +33,7 @@
 #include "chrono_postprocess/ChPovRay.h"
 #include "chrono_postprocess/ChPovRayAssetCustom.h"
 #include "chrono_thirdparty/filesystem/path.h"
+#include <experimental/filesystem>
 #include <ctime>        
 #include <iomanip>
 #include <random>
@@ -41,10 +42,9 @@
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
-
+namespace fs = std::experimental::filesystem;
 
 #ifdef CHRONO_IRRLICHT
-// Use the main namespaces of Irrlicht
 using namespace chrono::irrlicht;
 using namespace irr;
 using namespace irr::core;
@@ -77,20 +77,32 @@ std::string SetDataPath(std::string projname, bool archive) {
 	const std::string out_dir = out_dir_temp;
 	const std::string out_dir_log = out_dir + "/userlog.txt";
 
-	chrono::GetLog() << "\nIM HERE 1";
-	// Create the directory according to the output data path  and write a copy of the consule log to the directory
+	// Create the directory according to the output data path. If the path already exists, delete the contents before continuing.
 	auto out_path = filesystem::path(out_dir);
-	filesystem::create_directory(out_path);
-	chrono::GetLog() << "\nIM HERE 2" << "\t" << out_path;
-	if (!out_path.exists()) {
-		return "";
+	if (out_path.exists()) {
+		fs::recursive_directory_iterator iter(out_dir);
+		fs::recursive_directory_iterator end;
+
+		while (iter != end) {
+			filesystem::path clear = filesystem::path(iter->path().string());
+			clear.remove_file();
+
+			std::error_code ec;
+			iter.increment(ec);
+			if (ec) {
+				std::cerr << "Error While Deleting : " << iter->path().string() << " :: " << ec.message() << '\n';
+			}
+		}
 	}
+	else filesystem::create_directory(out_path);
+
+	// Redirect the consule printouts to a userlog file
+	if (!out_path.exists()) return "";
 	else {
-		//fflush(stdout);
-		//freopen(out_dir_log.c_str(), "w", stdout);
+		fflush(stdout);
+		freopen(out_dir_log.c_str(), "w", stdout);
 	}
 
-	chrono::GetLog() << "\IM HERE 3";
 	// Set the Chrono data and output paths so that this information can be access by other functions
 	SetChronoDataPath(CHRONO_DATA_DIR);
 	SetChronoOutputPath(out_dir);
@@ -254,8 +266,6 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 //Creates the beads of the inner cylinder and gives it a specific texture. Add all the beads to the list pointed by p_list. Fix the beads to rotatingBody. 
 void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double height, int methode, std::shared_ptr<chrono::ChBodyFrame> rotatingBody, double mass, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector <double>* p_ray) {
 	
-
-	
 	if (methode == 1) { //Column arrangement
 		for (int i = 0; i < floor((CH_C_PI*(r_cyl_int+r_bead)) / r_bead) ; i++) {
 			for (int j = 0; j < floor(height / (2 * r_bead)); j++) {
@@ -326,9 +336,8 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 		}
 	}
 
-	else {
-		printf("La methode rentree est incorrecte\n");
-	}
+	else fprintf(stderr, "La methode rentree est incorrecte");
+		//printf("La methode rentree est incorrecte\n");
 }
 
 
@@ -394,9 +403,8 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 		}
 	}
 
-	 else {
-	 printf("La methode demandee est incorrecte");
-	}
+	 else fprintf(stderr, "La methode demandee est incorrecte");
+	 //printf("La methode demandee est incorrecte");
 
 }
 
@@ -531,10 +539,10 @@ int main(int argc, char* argv[]) {
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
 	double r_bead = 0.2;
-	double r_cyl_ext = 10;
-	double r_cyl_int = 5;
-	double height = 5;
-	double height_bead = 5;
+	double r_cyl_ext = 5;//10;
+	double r_cyl_int = 2.5;
+	double height = 2.5;//5;
+	double height_bead = 1.5;//5;
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
 	
@@ -548,8 +556,7 @@ int main(int argc, char* argv[]) {
 	std::string datafile3 = out_dir +"/settings.dat";
 	ChStreamOutAsciiFile settings(datafile3.c_str());
 	settings << gravity << " " << r_bead << " " << r_cyl_ext << " " << r_cyl_int << " " << height << " " << height_bead << " " << mass << " " << "\n";
-	SetChronoDataPath(CHRONO_DATA_DIR);
-	
+	//SetChronoDataPath(CHRONO_DATA_DIR);
 
 	// Create a ChronoENGINE physical system
 	ChSystemParallelSMC mphysicalSystem;
@@ -568,20 +575,18 @@ int main(int argc, char* argv[]) {
 	mphysicalSystem.SetTimestepperType(ChTimestepper::Type::LEAPFROG); /// Types: LEAPFROG....
 	mphysicalSystem.Set_G_acc(ChVector<>(0, gravity, 0));
 
-#ifdef CHRONO_IRRLICHT
-	// Create the Irrlicht visualization (open the Irrlicht device,
-	// bind a simple user interface, etc. etc.)
-	ChIrrApp application(&mphysicalSystem, L"Collisions between objects", core::dimension2d<u32>(800, 600), false, true);
+	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead / 2);
 
+	#ifdef CHRONO_IRRLICHT
+		// Create the Irrlicht visualization (open the Irrlicht device, bind a simple user interface, etc. etc.)
+		ChIrrApp application(&mphysicalSystem, L"Collisions between objects", core::dimension2d<u32>(800, 600), false, true);
 
-	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
-	ChIrrWizard::add_typical_Logo(application.GetDevice());
-	ChIrrWizard::add_typical_Sky(application.GetDevice());
-	ChIrrWizard::add_typical_Lights(application.GetDevice());
-	ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 0, 30));
-
-	
-#endif
+		// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
+		ChIrrWizard::add_typical_Logo(application.GetDevice());
+		ChIrrWizard::add_typical_Sky(application.GetDevice());
+		ChIrrWizard::add_typical_Lights(application.GetDevice());
+		ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 0, r_cyl_ext * 2.5)); //30
+	#endif
 
 	// Create all the rigid bodies.
 	std::shared_ptr<ChLinkMotorRotationSpeed>* motor;
@@ -622,6 +627,7 @@ int main(int argc, char* argv[]) {
 	std::string datafile2 = out_dir + "/position.dat";
 	std::ofstream position(datafile2, std::ios::out | std::ios::trunc);
 	//position << "x" << " " << "y" << " " << "z" << " " << "radius" << "\n";
+	
 	// Create an exporter to POVray and set all associated filepaths and settings 
 	ChPovRay pov_exporter = ChPovRay(&mphysicalSystem);
 	if (SetPovrayPaths(&pov_exporter, out_dir) != 0) {
@@ -630,42 +636,41 @@ int main(int argc, char* argv[]) {
 	}
 	SetPovrayParameters(&pov_exporter, 0, 0, 30);
 
+	#ifdef CHRONO_IRRLICHT
+		// Use this function for adding a ChIrrNodeAsset to all items
+		// Otherwise use application.AssetBind(myitem); on a per-item basis.
+		application.AssetBindAll();
 
-	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead/2);
-
-#ifdef CHRONO_IRRLICHT
-	// Use this function for adding a ChIrrNodeAsset to all items
-	// Otherwise use application.AssetBind(myitem); on a per-item basis.
-	application.AssetBindAll();
-
-	// Use this function for 'converting' assets into Irrlicht meshes
-	application.AssetUpdateAll();
-
-#endif
-	//
+		// Use this function for 'converting' assets into Irrlicht meshes
+		application.AssetUpdateAll();
+	#endif
+	
 	// THE SOFT-REAL-TIME CYCLE
 	double i = 0.0;
 	bool motor_launched = false;
 	bool in_mouvement = true;
 	int id_frame = 0;
 	double time_sim = 10.0;
+	
 	while (time<time_sim) {
 
-/*#ifdef CHRONO_IRRLICHT
-		application.BeginScene(true, true, SColor(255, 255, 255, 255));
-		application.GetDevice()->run();
-		application.DrawAll();
-#endif*/
+		#ifdef CHRONO_IRRLICHT
+			application.BeginScene(true, true, SColor(255, 255, 255, 255));
+			application.GetDevice()->run();
+			application.DrawAll();
+		#endif
 
 		while (time == 0 || time < out_time) {
 			
 			mphysicalSystem.DoStepDynamics(time_step);
 			time += time_step;
 		}
+
 		create_array_velocity(p_beads_list, p_tab_v);
 		printf("mean_v : %f\n", mean_vector(p_tab_v));
 		printf("time : %f\n",time);
 		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
+
 		if (mean_vector(p_tab_v) < 0.001 && in_mouvement == true) {
 			in_mouvement = false;
 			if (position) {
@@ -680,11 +685,12 @@ int main(int argc, char* argv[]) {
 			printf("Les positions ont bien ete enregistrees\n");
 			time = time_sim + 1.0;
 		}
+		
 		pov_exporter.ExportData();
 
-#ifdef CHRONO_IRRLICHT
-		application.EndScene();
-#endif
+		#ifdef CHRONO_IRRLICHT
+			application.EndScene();
+		#endif
 
 		out_time = time - time_step + out_step;
 	}
