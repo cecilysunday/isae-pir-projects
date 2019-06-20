@@ -28,14 +28,24 @@
 	#include "chrono_irrlicht/ChIrrApp.h"
 #endif
 
-#include "chrono/assets/ChTexture.h"
+/*#include "chrono/assets/ChTexture.h"
 #include <chrono_postprocess/ChGnuPlot.h>
 #include "chrono_postprocess/ChPovRay.h"
 #include "chrono_postprocess/ChPovRayAssetCustom.h"
 #include <ctime>        
 #include <iomanip>
 #include "chrono_thirdparty/filesystem/path.h"
+#include <experimental/filesystem>*/
+
+#include "chrono/assets/ChTexture.h"
+#include <chrono_postprocess/ChGnuPlot.h>
+#include "chrono_postprocess/ChPovRay.h"
+#include "chrono_postprocess/ChPovRayAssetCustom.h"
+#include "chrono_thirdparty/filesystem/path.h"
 #include <experimental/filesystem>
+#include <ctime>        
+#include <iomanip>
+#include <random>
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -50,7 +60,7 @@ using namespace irr::scene;
 using namespace irr::video;
 using namespace irr::io;
 using namespace irr::gui; 
-#endif*/
+#endif
 
 
 std::string SetDataPath(std::string projname, bool archive) {
