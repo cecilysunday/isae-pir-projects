@@ -498,7 +498,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
 	bool dontcare = false;
-	std::string projname = "_tc_run";
+	std::string projname = "_tc_run"; 
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
 
@@ -520,13 +520,14 @@ int main(int argc, char* argv[]) {
 	double mass = rho*(4/3)*CH_C_PI*pow(r_bead,3);
 	double rotation_speed =0.09;
 	
-	std::string path = out_dir + "/../TEMP_tc_set";
+	std::string path = out_dir + "/../20190620_113342_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 	fichier >> gravity >> r_bead>> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 	
 	//Paramètres de simulation
 	double time_step = 1e-4;//1e-4
 	double out_step = 0.02;
+
 	double time = 0;
 	double out_time = 0;
 	double time_sim = 1.0;
@@ -547,14 +548,6 @@ int main(int argc, char* argv[]) {
 	mphysicalSystem.ChangeCollisionSystem(CollisionSystemType::COLLSYS_PARALLEL); /// Types:: COLLSYS_PARALLEL, COLLSYS_BULLET_PARALLEL
 	mphysicalSystem.SetTimestepperType(ChTimestepper::Type::LEAPFROG); /// Types: LEAPFROG....
 	mphysicalSystem.Set_G_acc(ChVector<>(0, gravity, 0));
-
-	// Create an exporter to POVray and set all associated filepaths and settings 
-	ChPovRay pov_exporter = ChPovRay(&mphysicalSystem);
-	if (SetPovrayPaths(&pov_exporter, out_dir) != 0) {
-		fprintf(stderr, "Error creating povray data paths\n");
-		return -1;
-	}
-	SetPovrayParameters(&pov_exporter, 0, 30, 0);
 
 	// Create the Irrlicht visualization (open the Irrlicht device, bind a simple user interface, etc. etc.)
 	#ifdef CHRONO_IRRLICHT
@@ -612,6 +605,14 @@ int main(int argc, char* argv[]) {
 	velocity_profile << "0" << " " << "0" << " " << "id_frame" << " " << "id_part" << " " << "v_r" << " " << "v_t" << " " << "r" << "\n";
 	all_data_surface << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
 	
+	// Create an exporter to POVray and set all associated filepaths and settings 
+	ChPovRay pov_exporter = ChPovRay(&mphysicalSystem);
+	if (SetPovrayPaths(&pov_exporter, out_dir) != 0) {
+		fprintf(stderr, "Error creating povray data paths\n");
+		return -1;
+	}
+	SetPovrayParameters(&pov_exporter, 0, 30, 0);
+
 	// Use this function for adding a ChIrrNodeAsset to all items
 	// Otherwise use application.AssetBind(myitem); on a per-item basis.
 	#ifdef CHRONO_IRRLICHT
