@@ -429,7 +429,6 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 	list_surf.Resize(p_beads_list->size());
 	for (int i = 0; i<p_beads_list->size(); ++i) {
 		
-		
 		bool au_dessus = false;
 		double y = (*p_beads_list)[i]->GetPos().y();
 		double x = (*p_beads_list)[i]->GetPos().x();
@@ -440,18 +439,19 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 			double y2 = (*p_beads_list)[j]->GetPos().y();
 			double x2 = (*p_beads_list)[j]->GetPos().x();
 			double z2 = (*p_beads_list)[j]->GetPos().z();
-			if ((y2 > y +2* r_bead) && sqrt((x2-x)*(x2-x)+(z2-z)*(z2-z))<r_bead/2 && au_dessus==false) {
+			/*if ((y2 > y + 2* r_bead) && sqrt((x2-x)*(x2-x)+(z2-z)*(z2-z))<r_bead/2 && au_dessus==false) {
+				au_dessus = true;
+			}*/
+			if ((y2 > y + 2 * r_bead) && au_dessus == false) {
 				au_dessus = true;
 			}
 		}
 		if (au_dessus == false) {
-			
 			list_surf.SetElementN(nb_bille_surf,(*p_beads_list)[i]);
 			nb_bille_surf = nb_bille_surf + 1;
-			
-			
 		}
 	}
+	GetLog() << "\nNum Surface = " << nb_bille_surf;
 	
 	p_surface->Resize(nb_bille_surf);
 	for (int i = 0; i < nb_bille_surf; i++) {
@@ -520,7 +520,7 @@ int main(int argc, char* argv[]) {
 	double mass = rho*(4/3)*CH_C_PI*pow(r_bead,3);
 	double rotation_speed =0.09;
 	
-	std::string path = out_dir + "/../20190620_113342_tc_set";
+	std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 	fichier >> gravity >> r_bead>> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 	
