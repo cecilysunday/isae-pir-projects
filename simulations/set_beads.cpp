@@ -257,7 +257,7 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 		}
 	}
 
-	else fprintf(stderr, "La methode rentree est incorrecte");
+	else fprintf(stderr, "La methode rentree est incorrecte\n");
 	
 }
 
@@ -334,7 +334,7 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 		}
 	}
 
-	else fprintf(stderr, "La methode rentree est incorrecte");
+	else fprintf(stderr, "La methode rentree est incorrecte\n");
 
 }
 
@@ -401,7 +401,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 		}
 	}
 
-	 else fprintf(stderr, "La methode demandee est incorrecte");
+	 else fprintf(stderr, "La methode demandee est incorrecte\n");
 
 }
 
@@ -564,7 +564,7 @@ int main(int argc, char* argv[]) {
 	mphysicalSystem.GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
 	mphysicalSystem.GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 
-	mphysicalSystem.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+	mphysicalSystem.GetSettings()->collision.bins_per_axis = vec3(15, 15, 15);
 	mphysicalSystem.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R; /// Types: NARROWPHASE_HYBRID_MPR, NARROWPHASE_R, NARROWPHASE_MPR
 
 	mphysicalSystem.ChangeCollisionSystem(CollisionSystemType::COLLSYS_PARALLEL); /// Types:: COLLSYS_PARALLEL, COLLSYS_BULLET_PARALLEL
@@ -647,7 +647,7 @@ int main(int argc, char* argv[]) {
 	bool motor_launched = false;
 	bool in_mouvement = true;
 	int id_frame = 0;
-	double time_sim = 10.0;
+	double time_sim = 1.5;
 	
 	while (time<time_sim) {
 
@@ -672,7 +672,7 @@ int main(int argc, char* argv[]) {
 
 		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
 
-		if (mean_vector(p_tab_v) < 0.001 && in_mouvement == true) {
+		if ((mean_vector(p_tab_v) < 0.001 && in_mouvement == true) || time > time_sim) {
 			in_mouvement = false;
 			if (position) {
 				for (int j = 0; j < p_beads_list->size(); j++) {
