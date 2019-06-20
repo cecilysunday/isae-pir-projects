@@ -79,7 +79,7 @@ std::string SetDataPath(std::string projname, bool archive) {
 
 	// Create the directory according to the output data path. If the path already exists, delete the contents before continuing.
 	auto out_path = filesystem::path(out_dir);
-	if (out_path.exists()) {
+	/*if (out_path.exists()) {
 		recursive_directory_iterator iter(out_dir);
 		recursive_directory_iterator end;
 
@@ -94,7 +94,7 @@ std::string SetDataPath(std::string projname, bool archive) {
 			}
 		}
 	}
-	else filesystem::create_directory(out_path);
+	else*/ filesystem::create_directory(out_path);
 
 	// Redirect the consule printouts to a userlog file
 	if (!out_path.exists()) return "";
@@ -664,8 +664,12 @@ int main(int argc, char* argv[]) {
 		}
 
 		create_array_velocity(p_beads_list, p_tab_v);
+
 		printf("mean_v : %f\n", mean_vector(p_tab_v));
 		printf("time : %f\n",time);
+		fprintf(stderr, "mean_v : %f\n", mean_vector(p_tab_v));
+		fprintf(stderr, "time : %f\n",time);
+
 		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
 
 		if (mean_vector(p_tab_v) < 0.001 && in_mouvement == true) {
