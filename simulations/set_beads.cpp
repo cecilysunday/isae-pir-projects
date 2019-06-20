@@ -42,7 +42,7 @@
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
-namespace fs = std::experimental::filesystem;
+using namespace std::experimental::filesystem;
 
 #ifdef CHRONO_IRRLICHT
 using namespace chrono::irrlicht;
@@ -80,8 +80,8 @@ std::string SetDataPath(std::string projname, bool archive) {
 	// Create the directory according to the output data path. If the path already exists, delete the contents before continuing.
 	auto out_path = filesystem::path(out_dir);
 	if (out_path.exists()) {
-		fs::recursive_directory_iterator iter(out_dir);
-		fs::recursive_directory_iterator end;
+		recursive_directory_iterator iter(out_dir);
+		recursive_directory_iterator end;
 
 		while (iter != end) {
 			filesystem::path clear = filesystem::path(iter->path().string());
@@ -257,9 +257,7 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 		}
 	}
 
-	else {
-		printf("La methode rentree est incorrecte\n");
-	}
+	else fprintf(stderr, "La methode rentree est incorrecte");
 	
 }
 
@@ -337,7 +335,7 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 	}
 
 	else fprintf(stderr, "La methode rentree est incorrecte");
-		//printf("La methode rentree est incorrecte\n");
+
 }
 
 
@@ -404,7 +402,6 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 	}
 
 	 else fprintf(stderr, "La methode demandee est incorrecte");
-	 //printf("La methode demandee est incorrecte");
 
 }
 
@@ -556,7 +553,6 @@ int main(int argc, char* argv[]) {
 	std::string datafile3 = out_dir +"/settings.dat";
 	ChStreamOutAsciiFile settings(datafile3.c_str());
 	settings << gravity << " " << r_bead << " " << r_cyl_ext << " " << r_cyl_int << " " << height << " " << height_bead << " " << mass << " " << "\n";
-	//SetChronoDataPath(CHRONO_DATA_DIR);
 
 	// Create a ChronoENGINE physical system
 	ChSystemParallelSMC mphysicalSystem;
@@ -611,6 +607,7 @@ int main(int argc, char* argv[]) {
 	
 	create_some_falling_items(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list,p_beads_list, motor,p_radius_list);
 	printf("nombre de billes : %i\n", p_beads_list->size());
+	fprintf(stderr, "nombre de billes : %i\n", p_beads_list->size());
 	ChVectorDynamic<double>* p_tab_v_cyl_int(0);
 	ChVectorDynamic<double> tab_v_cyl_int = ChVectorDynamic<double>(0);
 	p_tab_v_cyl_int = &tab_v_cyl_int;
