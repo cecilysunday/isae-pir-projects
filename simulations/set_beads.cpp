@@ -522,7 +522,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x, double y, double z) {
 
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
-	bool dontcare = true;
+	bool dontcare = false;
 	std::string projname = "_tc_set";
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
@@ -536,10 +536,10 @@ int main(int argc, char* argv[]) {
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
 	double r_bead = 0.2;
-	double r_cyl_ext = 5;//10;
-	double r_cyl_int = 2.5;
-	double height = 2.5;//5;
-	double height_bead = 1.5;//5;
+	double r_cyl_ext = 10;
+	double r_cyl_int = 5;
+	double height = 5;
+	double height_bead = 4.5;
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
 	
