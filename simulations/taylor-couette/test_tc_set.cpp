@@ -19,8 +19,8 @@
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChBody.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono/utils/ChUtilsCreators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+//#include "chrono/utils/ChUtilsCreators.h"
+//#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
 #include "chrono/assets/ChTexture.h"
 #include "chrono_postprocess/ChPovRay.h"
@@ -307,13 +307,13 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 
 	//Creation of the ground + seiling body
 	auto fixedBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+	fixedBody->SetMaterialSurface(material);
 	fixedBody->SetMass(10.0);
 	fixedBody->SetBodyFixed(true);
 	fixedBody->SetPos(ChVector<>());
-
-	//Sets the collision parameters of the ground + seiling body
 	fixedBody->SetCollide(true);
-	fixedBody->GetCollisionModel()->ClearModel();
+
+	//Sets size of the bounding boxes
 	ChVector<> hsize = 0.5 * ChVector<>(2 * r_cyl_ext, 1, 2 * r_cyl_ext);
 
 	//Creation of the ground
@@ -323,7 +323,6 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	box1->SetColor(ChColor(1, 0, 0));
 	box1->SetFading(0.6f);
 	fixedBody->AddAsset(box1);
-	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, -0.5, 0));
 
 	//Creation of the ceiling
 	auto box2 = std::make_shared<ChBoxShape>();
@@ -343,6 +342,8 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	fixedBody->AddAsset(box3);
 
 	//End of settings the collision parameters of the ground + seiling body
+	fixedBody->GetCollisionModel()->ClearModel();
+	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, -0.5, 0));
 	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, height + 0.5, 0));
 	fixedBody->GetCollisionModel()->AddCylinder(r_cyl_int, height / 2, r_cyl_int, ChVector<>(0, 0, 0));
 	fixedBody->GetCollisionModel()->BuildModel();
