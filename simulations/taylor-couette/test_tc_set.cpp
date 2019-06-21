@@ -525,20 +525,20 @@ int main(int argc, char* argv[]) {
 	
 	while (time<time_sim) {
 
-		#ifdef CHRONO_IRRLICHT
+		/*#ifdef CHRONO_IRRLICHT
 			application.BeginScene(true, true, SColor(255, 255, 255, 255));
 			application.GetDevice()->run();
 			application.DrawAll();
-		#endif
+		#endif*/
 
 		while (time == 0 || time < out_time) {
 			mphysicalSystem.DoStepDynamics(time_step);
 			time += time_step;
 		}
 
-		#ifdef CHRONO_IRRLICHT
+		/*#ifdef CHRONO_IRRLICHT
 			application.EndScene();
-		#endif
+		#endif*/
 
 		create_array_velocity(p_beads_list, p_tab_v);
 		mean_v << time << " " << mean_vector(p_tab_v) << "\n";

@@ -417,7 +417,7 @@ int main(int argc, char* argv[]) {
 	double rotation_speed =0.096;//0.096
 	
 	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
-	std::string path = out_dir + "/../20190621_113216_tc_set";
+	std::string path = out_dir + "/../20190621_160112_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 	fichier >> gravity >> r_bead>> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 	
@@ -427,7 +427,7 @@ int main(int argc, char* argv[]) {
 
 	double time = 0;
 	double out_time = 0;
-	double time_sim = 2.0;
+	double time_sim = 3.0;
 
 	// Create a ChronoENGINE physical system
 	ChSystemParallelSMC mphysicalSystem;
@@ -525,20 +525,20 @@ int main(int argc, char* argv[]) {
 
 	while (time < time_sim) {
 		//printf("nb bille = %i \n", p_beads_list->size());
-		#ifdef CHRONO_IRRLICHT
+		/*#ifdef CHRONO_IRRLICHT
 			application.BeginScene(true, true, SColor(255, 255, 255, 255));
 			application.GetDevice()->run();
 			application.DrawAll();
-		#endif
+		#endif*/
 		
 		while (time == 0 || time < out_time) {
 			mphysicalSystem.DoStepDynamics(time_step);
 			time += time_step;
 		}
 
-		#ifdef CHRONO_IRRLICHT
+		/*#ifdef CHRONO_IRRLICHT
 			application.EndScene();
-		#endif
+		#endif*/
 
 		detect_surface(p_beads_list, p_surface, r_bead, time);
 			
