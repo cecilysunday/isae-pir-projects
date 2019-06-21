@@ -88,7 +88,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	ChVector<> init_vel(0, 0, 0);
 	
 	auto material = std::make_shared<ChMaterialSurfaceSMC>();
-	material->SetRestitution(0.1f);
+	material->SetRestitution(0.6f);
 	material->SetFriction(0.4f);
 	material->SetAdhesion(0);
 
@@ -97,48 +97,43 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	body->SetMass(mass);
 	body->SetPos(pos);
 	body->SetRot(rot);
+	body->SetMaterialSurface(material);
 	body->SetPos_dt(init_vel);
+	body->SetInertiaXX(0.4 * mass * r_bead * r_bead * ChVector<>(1, 1, 1));
+	body->SetCollide(true);
 	if (isFixed == true) {
 		body->SetBodyFixed(true);
 	}
 	else {
 		body->SetBodyFixed(false);
 	}
-	body->SetMaterialSurface(material);
-	body->SetCollide(true);
-
 
 	body->GetCollisionModel()->ClearModel();
 	body->GetCollisionModel()->AddSphere(r_bead);
 	body->GetCollisionModel()->BuildModel();
 	
-	body->SetInertiaXX(0.4 * mass * r_bead * r_bead * ChVector<>(1, 1, 1));
 	auto sphere = std::make_shared<ChSphereShape>();
 	sphere->GetSphereGeometry().rad = r_bead;
-	//sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
 	body->AddAsset(sphere);
-
 
 	auto text = std::make_shared<ChTexture>();
 	auto mvisual = std::make_shared<ChColorAsset>();
-	
-	//body->AddAsset(mvisual);
 	
 	if (isWall == true) {
 		mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));
 		body->AddAsset(mvisual);
 	}
-
 	else {
 		text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
 		body->SetIdentifier(i);
 		body->AddAsset(text);
 		//p_list->push_back(body);
 	}
+
 	p_list->push_back(body);
-	
 	mphysicalSystem.AddBody(body);
 }
+
 
 void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_ext, double height, int methode, double mass, std::vector< std::shared_ptr< ChBody > >* p_list) {
 
@@ -179,7 +174,6 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 	}
 
 	else fprintf(stderr, "La methode rentree est incorrecte\n");
-
 }
 
 void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double height, int methode, std::shared_ptr<chrono::ChBodyFrame> rotatingBody, double mass, std::vector< std::shared_ptr< ChBody > >* p_list) {
@@ -240,10 +234,9 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 		}
 	}
 
-	else {
-		fprintf(stderr, "La methode rentree est incorrecte\n");
-	}
+	else fprintf(stderr, "La methode rentree est incorrecte\n");
 }
+
 
 void remplir(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double r_cyl_ext, double mass, int methode, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius) {
 	for (int i = 0; i < p_list_pos->size(); i++) {
@@ -253,6 +246,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_i
 	}
 
 }
+
 
 void set_up(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_cylinder_ext_list, std::vector< std::shared_ptr< ChBody > >* p_cylinder_int_list, std::vector< std::shared_ptr< ChBody > >* p_beads_list, double rotation_speed, std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius) {
 
@@ -329,7 +323,8 @@ void set_up(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl
 
 }
 
-void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface, double r_bead) {
+
+void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface, double r_bead, double time) {
 	
 	p_surface->Reset();
 	p_surface->Resize(0);
@@ -350,38 +345,7 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 		}
 	}
 
-	/*ChVectorDynamic<std::shared_ptr<ChBody>> list_surf;
-	int nb_bille_surf = 0;
-	list_surf.Resize(p_beads_list->size());
-	for (int i = 0; i<p_beads_list->size(); ++i) {
-		
-		bool au_dessus = false;
-		double y = (*p_beads_list)[i]->GetPos().y();
-		double x = (*p_beads_list)[i]->GetPos().x();
-		double z = (*p_beads_list)[i]->GetPos().z();
-		
-		for (int j=0; j<p_beads_list->size(); ++j) {
-			
-			double y2 = (*p_beads_list)[j]->GetPos().y();
-			double x2 = (*p_beads_list)[j]->GetPos().x();
-			double z2 = (*p_beads_list)[j]->GetPos().z();
-			//GetLog() << "\ndistance x-z  = " << sqrt((x2 - x)*(x2 - x) + (z2 - z)*(z2 - z)) << "\t" << r_bead/2;
-
-			if ((y2 > y) && sqrt((x2-x)*(x2-x)+(z2-z)*(z2-z))<2*(r_bead-r_bead/100) && au_dessus==false) {
-				//printf("\n on rentre dans le if");
-				au_dessus = true;
-			}
-			/*if ((y2 > y + 2 * r_bead) && au_dessus == false) {
-				au_dessus = true;
-			}*/
-		/*}
-		if (au_dessus == false) {
-			list_surf.SetElementN(nb_bille_surf,(*p_beads_list)[i]);
-			nb_bille_surf = nb_bille_surf + 1;
-		}
-	}*/
-	GetLog() << "\nNumTotal = " << p_beads_list->size();
-	GetLog() << "\nNum Surface = " << nb_bille_surf;
+	GetLog() << "\nTime = " << time << "\tNum Total Beads = " << p_beads_list->size() << "\tNum Surface Beads = " << nb_bille_surf;
 	
 	p_surface->Resize(nb_bille_surf);
 	for (int i = 0; i < nb_bille_surf; i++) {
@@ -390,6 +354,7 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 	
 }
 
+
 double mean_vector(ChVectorDynamic<double>* p_vector) {
 	double s = 0;
 	for (int i = 0; i < p_vector->GetLength(); i++) {
@@ -397,6 +362,7 @@ double mean_vector(ChVectorDynamic<double>* p_vector) {
 	}
 	return s / p_vector->GetLength();
 }
+
 
 bool is_in_mouvement(std::vector< std::shared_ptr< ChBody > >* p_beads_list) {//renvoie true si les billes sont en mouvement
 	ChVectorDynamic<double> tab_v = ChVectorDynamic<double>(p_beads_list->size());
@@ -427,7 +393,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
-	bool dontcare = true;
+	bool dontcare = false;
 	std::string projname = "_tc_run"; 
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
@@ -442,16 +408,16 @@ int main(int argc, char* argv[]) {
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
 	double r_bead =0.2;
-	double r_cyl_ext = 10;
-	double r_cyl_int = 5;
-	double height = 5;
-	double height_bead = 4.5;
+	double r_cyl_ext = 10;//5;
+	double r_cyl_int = 5;// 2.5;
+	double height = 7;// 2.5;
+	double height_bead = 5;// 2.5;
 	double rho = 2.55;
 	double mass = rho*(4/3)*CH_C_PI*pow(r_bead,3);
 	double rotation_speed =0.096;//0.096
 	
 	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
-	std::string path = out_dir + "/../TEMP_tc_set";
+	std::string path = out_dir + "/../20190621_113216_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 	fichier >> gravity >> r_bead>> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 	
@@ -461,7 +427,7 @@ int main(int argc, char* argv[]) {
 
 	double time = 0;
 	double out_time = 0;
-	double time_sim = 1.0;
+	double time_sim = 2.0;
 
 	// Create a ChronoENGINE physical system
 	ChSystemParallelSMC mphysicalSystem;
@@ -479,6 +445,7 @@ int main(int argc, char* argv[]) {
 	mphysicalSystem.ChangeCollisionSystem(CollisionSystemType::COLLSYS_PARALLEL); /// Types:: COLLSYS_PARALLEL, COLLSYS_BULLET_PARALLEL
 	mphysicalSystem.SetTimestepperType(ChTimestepper::Type::LEAPFROG); /// Types: LEAPFROG....
 	mphysicalSystem.Set_G_acc(ChVector<>(0, gravity, 0));
+	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead / 2);
 
 	// Create the Irrlicht visualization (open the Irrlicht device, bind a simple user interface, etc. etc.)
 	#ifdef CHRONO_IRRLICHT
@@ -518,12 +485,13 @@ int main(int argc, char* argv[]) {
 	
 	read_pos(p_list_position,p_list_radius, path);
 	set_up(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list, p_beads_list, rotation_speed, p_list_position,p_list_radius);
-	printf("tout a bien ete cree\n");
+	fprintf(stderr, "Tout a bien ete cree\n");
+	
 	ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface(0);
 	ChVectorDynamic<std::shared_ptr<ChBody>> surface = ChVectorDynamic<std::shared_ptr<ChBody>>(0);
+	
 	p_surface = &surface;
-
-	detect_surface(p_beads_list,p_surface, r_bead);
+	detect_surface(p_beads_list,p_surface, r_bead, time);
 	
 	// create a .dat file with three columns of demo data:
 	std::string datafile = out_dir + "/velocity_profile.dat";
@@ -531,7 +499,6 @@ int main(int argc, char* argv[]) {
 
 	std::string datafile2 = out_dir + "/all_data_surface.dat";
 	ChStreamOutAsciiFile all_data_surface(datafile2.c_str());
-	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead / 2);
 	
 	velocity_profile << "0" << " " << "0" << " " << "id_frame" << " " << "id_part" << " " << "v_r" << " " << "v_t" << " " << "r" << "\n";
 	all_data_surface << "time" << " " << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
@@ -545,7 +512,6 @@ int main(int argc, char* argv[]) {
 	SetPovrayParameters(&pov_exporter, 0, 30, 0);
 
 	// Use this function for adding a ChIrrNodeAsset to all items
-	// Otherwise use application.AssetBind(myitem); on a per-item basis.
 	#ifdef CHRONO_IRRLICHT
 		application.AssetBindAll();
 		application.AssetUpdateAll();
@@ -558,25 +524,25 @@ int main(int argc, char* argv[]) {
 	int id_frame = 0;
 
 	while (time < time_sim) {
-		printf("nb bille = %i \n", p_beads_list->size());
+		//printf("nb bille = %i \n", p_beads_list->size());
 		#ifdef CHRONO_IRRLICHT
 			application.BeginScene(true, true, SColor(255, 255, 255, 255));
 			application.GetDevice()->run();
 			application.DrawAll();
 		#endif
 		
-		detect_surface(p_beads_list, p_surface, r_bead);
+		while (time == 0 || time < out_time) {
+			mphysicalSystem.DoStepDynamics(time_step);
+			time += time_step;
+		}
+
+		#ifdef CHRONO_IRRLICHT
+			application.EndScene();
+		#endif
+
+		detect_surface(p_beads_list, p_surface, r_bead, time);
 			
-		printf("on arrive apres la detection surface\n");
 		for (int j = 0; j < p_surface->GetLength(); j++) {
-			//fprintf(stderr, "taille surface : %i\n", p_surface->GetLength());
-			printf("taille surface : %i\n", p_surface->GetLength());
-			std::shared_ptr<ChBody> p_body = p_surface->GetElementN(j);
-			ChVector<> vitesse =p_body->GetPos();
-			double test = vitesse.x();
-			printf("time = %f\n", time);
-			
-			
 			double v_x = p_surface->GetElementN(j)->GetPos_dt().x();
 			double v_y = p_surface->GetElementN(j)->GetPos_dt().y();
 			double v_z = p_surface->GetElementN(j)->GetPos_dt().z();
@@ -592,20 +558,9 @@ int main(int argc, char* argv[]) {
 			velocity_profile << 0 << " " << 0 << " " << id_frame << " " << id << " " << v_r << " " << v_t << " " <<r << "\n";
 			all_data_surface << time << " " << id << " " << x << " " << y << " " << z << " " << v_x << " " << v_y << " " << v_z << " " << "\n";
 		}
-		
-
-		id_frame = id_frame + 1;
-		while (time == 0 || time < out_time) {
-			mphysicalSystem.DoStepDynamics(time_step);
-			time += time_step;
-		}
 
 		pov_exporter.ExportData();
-
-		#ifdef CHRONO_IRRLICHT
-			application.EndScene();
-		#endif
-
+		id_frame = id_frame + 1;
 		out_time = time - time_step + out_step;
 	}
 

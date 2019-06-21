@@ -35,7 +35,7 @@
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
-using namespace std::experimental::filesystem;
+
 
 #ifdef CHRONO_IRRLICHT
 	#include <irrlicht.h>
@@ -557,7 +557,7 @@ int main(int argc, char* argv[]) {
 	if (position) {
 		for (int j = 0; j < p_beads_list->size(); j++) {
 			position << (*p_beads_list)[j]->GetPos().x() << " " << (*p_beads_list)[j]->GetPos().y() << " " << (*p_beads_list)[j]->GetPos().z() << " " << (*p_radius_list)[j] << "\n";
-			printf("rayon : %f\n", (*p_radius_list)[j]);
+			// printf("rayon : %f\n", (*p_radius_list)[j]);
 		}
 
 		position << -100000000 << " " << -100000000 << " " << -100000000 << -100000000 << "\n";
