@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-project(ChronoTaylorCouette)
+project(PirProjects)
 
 # Set location of executable
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -71,55 +71,15 @@ endif()
 # Add subdirectories
 #--------------------------------------------------------------
 
-#add_subdirectory(shared)
+add_subdirectory(shared)
 
 # Options for configuring/building individual sets of programs
-#option(ENABLE_TEMPLATES "Build validation programs templates" OFF)
+option(ENABLE_TAYLORCOUETTE "Build taylor-couette shear cell validation programs" ON)
 
 # Propagate configuration to submodules.
-#if(ENABLE_TEMPLATES)
-#  message(STATUS "==== Validation program templates ====")
-#  add_subdirectory(templates)
-#endif()
-
-
-#=============================================================================
-#
-# CMake configuration file for the main ChronoTaylorCouette library.
-#
-#=============================================================================
-
-message(STATUS "==== Chrono Validation Testing - Taylor Couette ====")
-
-#-----------------------------------------------------------------------------
-# Collect files in the main ChronoTaylorCouette library
-#-----------------------------------------------------------------------------
-
-set(TESTS
-    set_beads
-    run
-    )
-
-
-#-----------------------------------------------------------------------------
-# Add the project executable
-#-----------------------------------------------------------------------------
-
-foreach(PROGRAM ${TESTS})
-
-	message(STATUS "...add ${PROGRAM}")
-	add_executable(${PROGRAM} "${PROGRAM}.cpp")
-	source_group("" FILES "${PROGRAM}.cpp")
-
-	set_target_properties(${PROGRAM} PROPERTIES
-   		COMPILE_FLAGS "${COMPILE_FLAGS}"
-    	COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"; SOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"; PROJECT_DATA_DIR=\"${PROJECT_DATA_DIR}\""
-    	LINK_FLAGS "${COMPILE_FLAGS} ${CHRONO_LINKER_FLAGS}"
-  	)
-
-	target_include_directories(${PROGRAM} PRIVATE ${CHRONO_INCLUDE_DIRS})
-	target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
-
-endforeach(PROGRAM)
+if(ENABLE_TAYLORCOUETTE)
+  message(STATUS "==== Validation program templates ====")
+  add_subdirectory(taylor-couette)
+endif()
 
 add_DLL_copy_command("${CHRONO_DLLS}")
