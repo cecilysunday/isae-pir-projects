@@ -306,13 +306,13 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 
 	//Creation of the ground + seiling body
 	auto fixedBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-	fixedBody->SetMaterialSurface(material);
-	fixedBody->SetMass(10.0);
+	fixedBody->SetMass(1.0);
 	fixedBody->SetBodyFixed(true);
 	fixedBody->SetPos(ChVector<>());
-	fixedBody->SetCollide(true);
 
-	//Sets size of the bounding boxes
+	//Sets the collision parameters of the ground + seiling body
+	fixedBody->SetCollide(true);
+	fixedBody->GetCollisionModel()->ClearModel();
 	ChVector<> hsize = 0.5 * ChVector<>(2 * r_cyl_ext, 1, 2 * r_cyl_ext);
 
 	//Creation of the ground
@@ -322,6 +322,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	box1->SetColor(ChColor(1, 0, 0));
 	box1->SetFading(0.6f);
 	fixedBody->AddAsset(box1);
+	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, -0.5, 0));
 
 	//Creation of the ceiling
 	auto box2 = std::make_shared<ChBoxShape>();
@@ -341,8 +342,6 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	fixedBody->AddAsset(box3);
 
 	//End of settings the collision parameters of the ground + seiling body
-	fixedBody->GetCollisionModel()->ClearModel();
-	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, -0.5, 0));
 	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, height + 0.5, 0));
 	fixedBody->GetCollisionModel()->AddCylinder(r_cyl_int, height / 2, r_cyl_int, ChVector<>(0, 0, 0));
 	fixedBody->GetCollisionModel()->BuildModel();
@@ -355,6 +354,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	fixedBody->AddAsset(mtexture);
 
 	//creation of all the set-up
+	fprintf(stderr, "Made it here\n");
 	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list, p_ray);
 	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, mass, p_cylinder_int_list, p_ray);
 	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true, p_ray);
@@ -419,7 +419,7 @@ int main(int argc, char* argv[]) {
 	double r_bead = 0.2;// 0.5, 0.2
 	double r_cyl_ext = 10;//5, 10, 100
 	double r_cyl_int = 5;//2, 5, 50
-	double height = 5;//9, 7, 5
+	double height = 5.5;//9, 7, 5
 	double height_bead = 5;//7, 5, 4.5
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
