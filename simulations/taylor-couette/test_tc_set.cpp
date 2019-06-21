@@ -53,14 +53,13 @@ using namespace chrono::postprocess;
 
 //Creates a bead at a specific pos with a specific mass and radius. Attributes an identifier i to the bead. Eventually fix the bead and give it a texture. Eventually set velocity of the bead. Add the bead to the list p_list.
 void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<> pos, double mass, bool isFixed, bool isWall, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector <double>* p_ray, int i = 0, bool has_velocity = false) {
-	
 	//USEFUL ?
 	ChQuaternion<> rot(1, 0, 0, 0);
 	ChVector<> init_vel(0, 0, 0);
-	
+
 	//Creation of the surface material
 	auto material = std::make_shared<ChMaterialSurfaceSMC>();
-	material->SetRestitution(0.6f);
+	material->SetRestitution(0.1f);
 	material->SetFriction(0.4f);
 	material->SetAdhesion(0);
 
@@ -70,8 +69,6 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	body->SetPos(pos);
 	body->SetRot(rot);
 	body->SetPos_dt(init_vel);
-	body->SetMaterialSurface(material);
-	body->SetCollide(true);
 
 	//Fix the bead if it is a bead of the outer cylinder
 	if (isWall == true) {
@@ -80,18 +77,22 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	else {
 		body->SetBodyFixed(false);
 	}
+	body->SetMaterialSurface(material);
+	body->SetCollide(true);
+
 
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator(seed);
 
-	std::normal_distribution<double> distribution(r_bead, r_bead/100);
+	std::normal_distribution<double> distribution(r_bead, r_bead / 100);
 	double ray = distribution(generator);
-	
 	//Sets the collision parameters
+	body->SetMaterialSurface(material);
+	body->SetCollide(true);
 	body->GetCollisionModel()->ClearModel();
 	body->GetCollisionModel()->AddSphere(ray);
 	body->GetCollisionModel()->BuildModel();
-	
+
 	//USEFULL ?
 	body->SetInertiaXX(0.4 * mass * r_bead * r_bead * ChVector<>(1, 1, 1));
 
@@ -99,25 +100,25 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	if (isWall == false || isFixed == false) {
 		auto sphere = std::make_shared<ChSphereShape>();
 		sphere->GetSphereGeometry().rad = r_bead;
+		sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
 		body->AddAsset(sphere);
 
-		auto text = std::make_shared<ChTexture>();
-		auto mvisual = std::make_shared<ChColorAsset>();
 
+		auto text = std::make_shared<ChTexture>();
 		if (isWall == true) {
-			mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));
-			body->AddAsset(mvisual);
+			text->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
 		}
 		else {
 			text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
-			body->AddAsset(text);
+
 		}
+		body->AddAsset(text);
 	}
-	
+
 	//Gives a random velocity to the bead
 	if (has_velocity == true) {
 		double vx = ChRandom() * 2;
-		double vy =  ChRandom() * 2;
+		double vy = ChRandom() * 2;
 		double vz = ChRandom() * 2;
 		ChVector<> v = ChVector<>(vx, vy, vz);
 		body->SetPos_dt(v);
@@ -354,7 +355,6 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	fixedBody->AddAsset(mtexture);
 
 	//creation of all the set-up
-	fprintf(stderr, "Made it here\n");
 	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list, p_ray);
 	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, mass, p_cylinder_int_list, p_ray);
 	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true, p_ray);
