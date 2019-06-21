@@ -246,6 +246,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 					
 					id = id + 1;
 				}
+				fprintf(stderr, "Exited Fill Loop 1\n");
 			}
 		}
 	}
@@ -419,8 +420,8 @@ int main(int argc, char* argv[]) {
 	double r_bead = 0.2;// 0.5, 0.2
 	double r_cyl_ext = 10;//5, 10, 100
 	double r_cyl_int = 5;//2, 5, 50
-	double height = 5.5;//9, 7, 5
-	double height_bead = 5;//7, 5, 4.5
+	double height = 5;//9, 7, 5
+	double height_bead = 4.5;//7, 5, 4.5
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
 	

@@ -410,8 +410,8 @@ int main(int argc, char* argv[]) {
 	double r_bead =0.2;
 	double r_cyl_ext = 10;//5;
 	double r_cyl_int = 5;// 2.5;
-	double height = 7;// 2.5;
-	double height_bead = 5;// 2.5;
+	double height = 5;// 2.5;
+	double height_bead = 4.5;// 2.5;
 	double rho = 2.55;
 	double mass = rho*(4/3)*CH_C_PI*pow(r_bead,3);
 	double rotation_speed =0.096;//0.096
