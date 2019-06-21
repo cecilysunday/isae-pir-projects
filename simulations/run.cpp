@@ -148,10 +148,10 @@ int SetPovrayPaths(ChPovRay* pov_exporter, const std::string out_dir) {
 //Read the position in a given file, and stock it into the list pointed by p_list_pos
 void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius, const std::string out_dir) {
 	
-	fprintf(stderr, "On arrive avant de lire le fichier\n");
+	//fprintf(stderr, "On arrive avant de lire le fichier\n");
 	std::ifstream fichier(out_dir + "/position.dat");
 	//std::ifstream fichier( out_dir + "/../TEMP_set/position.dat");
-	fprintf(stderr, "On passe la lecture du fichier\n");
+	//fprintf(stderr, "On passe la lecture du fichier\n");
 
 	int i = 0;
 	bool end_of_doc = false;
@@ -163,7 +163,7 @@ void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius,
 	while (end_of_doc==false){
 		
 		fichier >> x >> y>> z >> radius;
-		fprintf(stderr, "(%f,%f,%f)", x, y, z);
+		//fprintf(stderr, "(%f,%f,%f)", x, y, z);
 		if (x != -100000000 && y != -100000000 && z != -100000000 && radius != -100000000) {
 			p_list_pos->push_back(ChVector<>(x, y, z));
 			p_radius->push_back(radius);
@@ -171,7 +171,7 @@ void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius,
 		else {
 			end_of_doc = true;
 		}
-		fprintf(stderr, "On rentre dans la boucle : %i\n",i);
+		//fprintf(stderr, "On rentre dans la boucle : %i\n",i);
 		i = i + 1;
 	}
 	
@@ -213,72 +213,76 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
 	body->AddAsset(sphere);
 
-	
+
 	auto text = std::make_shared<ChTexture>();
+	auto mvisual = std::make_shared<ChColorAsset>();
+	
+	body->AddAsset(mvisual);
 	
 	if (isWall == true) {
-		text->SetTextureFilename(GetChronoDataFile("greenwhite.png"));	
+		mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));
+		body->AddAsset(mvisual);
 	}
 
 	else {
 		text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
-		body->SetId(i);
-		p_list->push_back(body);
+		body->SetIdentifier(i);
+		body->AddAsset(text);
+		//p_list->push_back(body);
 	}
+	p_list->push_back(body);
 	
-	body->AddAsset(text);
 	mphysicalSystem.AddBody(body);
 }
 
-void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_ext,double height, int methode, double mass, std::vector< std::shared_ptr< ChBody > >* p_list) {
-	
-	if (methode == 1) { //Remplissage en colonne
-		
-		for (int i = 0; i < floor(CH_C_PI*(r_cyl_ext-r_bead) / r_bead) ; i++) {
+void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_ext, double height, int methode, double mass, std::vector< std::shared_ptr< ChBody > >* p_list) {
+
+	if (methode == 1) { //Columns arrangement
+
+		for (int i = 0; i < floor(CH_C_PI*(r_cyl_ext - r_bead) / r_bead) + 1; i++) {
 			for (int j = 0; j < floor(height / (2 * r_bead)); j = j++) {
 				ChVector <> pos = ChVector<>((r_cyl_ext - r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(r_bead, mphysicalSystem, pos, mass,true,true, p_list);
+				create_bead(r_bead, mphysicalSystem, pos, mass, true, true, p_list);
 			}
 		}
 	}
 
-	else if (methode == 2) { //Remplissage en décalé sans contact vertical
+	else if (methode == 2) { //More compact arrangement (horizontal shift from a line to an other)
 		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
-			for (int i = 0; i < floor((CH_C_PI*(r_cyl_ext-r_bead)) / r_bead)+1; i++) {
+			for (int i = 0; i < floor((CH_C_PI*(r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
 				ChVector<> pos = ChVector<>((r_cyl_ext - r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(r_bead, mphysicalSystem, pos, mass,true,true, p_list);
+				create_bead(r_bead, mphysicalSystem, pos, mass, true, true, p_list);
 
-				ChVector<> pos2= ChVector<>((r_cyl_ext - r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(r_bead, mphysicalSystem, pos2, mass,true,true,p_list);
+				ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))));
+				create_bead(r_bead, mphysicalSystem, pos2, mass, true, true, p_list);
 			}
 		}
 	}
 
-	else if (methode == 3) { //Remplissage en décalé avec contact vertical
+	else if (methode == 3) { //Compact arrangement
 		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
-			for (int i = 0; i < floor((CH_C_PI*(r_cyl_ext-r_bead)) / r_bead)+1  ; i++) {
-				ChVector<> pos= ChVector<>((r_cyl_ext - r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
-				
-				create_bead(r_bead, mphysicalSystem, pos, mass,true,true,p_list);
-				
-				ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(r_bead, mphysicalSystem, pos2, mass,true, true,p_list);
+			for (int i = 0; i < floor((CH_C_PI*(r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
+				ChVector<> pos = ChVector<>((r_cyl_ext - r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
+
+				create_bead(r_bead, mphysicalSystem, pos, mass, true, true, p_list);
+				if (j + 1 < floor(height / (2 * r_bead))) {
+					ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))));
+					create_bead(r_bead, mphysicalSystem, pos2, mass, true, true, p_list);
+				}
 			}
 		}
 	}
 
-	else {
-		fprintf(stderr, "La methode rentree est incorrecte\n");
-	}
-	
+	else fprintf(stderr, "La methode rentree est incorrecte\n");
+
 }
 
 void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double height, int methode, std::shared_ptr<chrono::ChBodyFrame> rotatingBody, double mass, std::vector< std::shared_ptr< ChBody > >* p_list) {
 	
 	if (methode == 1) { //Remplissage en colonne
-		for (int i = 0; i < floor((CH_C_PI*(r_cyl_int+r_bead)) / r_bead) ; i++) {
+		for (int i = 0; i < floor((CH_C_PI*(r_cyl_int+r_bead)) / r_bead) +1; i++) {
 			for (int j = 0; j < floor(height / (2 * r_bead)); j++) {
-				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / r_cyl_int))), r_bead * 2 * j + r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / r_cyl_int))));
+				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int+r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int+r_bead)))));
 				create_bead(r_bead, mphysicalSystem, pos, mass,false, true, p_list);
 				
 				auto lock = std::make_shared<ChLinkMateFix>();
@@ -309,18 +313,18 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 	}
 
 	else if (methode == 3) { //Remplissage en décalé avec contact vertical
-		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
+		for (int j = 0; j < floor((height-r_bead) / (sqrt(3) * r_bead)); j = j + 2) {
 			for (int i = 0; i < floor( CH_C_PI*(r_cyl_int+r_bead) / r_bead) +1; i++) {
 
-				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * j + r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
+				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * j+r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
 				create_bead(r_bead, mphysicalSystem, pos, mass,false,true, p_list);
 
 				auto lock = std::make_shared<ChLinkMateFix>();
 				lock->Initialize(mphysicalSystem.Get_bodylist().back(), rotatingBody);
 				mphysicalSystem.AddLink(lock);
 
-				if (j + 1 < floor(height / (2 * r_bead))) {
-					ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_int + r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))));
+				if (j + 1 < floor((height-r_bead) / (sqrt(3)* r_bead))) {
+					ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * (j + 1)+r_bead, (r_cyl_int + r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos2, mass, false, true, p_list);
 
 					auto lock2 = std::make_shared<ChLinkMateFix>();
@@ -382,7 +386,7 @@ void set_up(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl
 
 	rotatingBody->SetMass(10.0);
 	rotatingBody->SetInertiaXX(ChVector<>(50, 50, 50));
-	rotatingBody->SetPos(ChVector<>(0, -1, 0));
+	rotatingBody->SetPos(ChVector<>(0, 0, 0));//0,-1,0
 	rotatingBody->SetCollide(true);
 	rotatingBody->SetMaterialSurface(material);
 
@@ -415,7 +419,7 @@ void set_up(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl
 	rotatingBody->AddAsset(mtexture);
 
 	create_cylinder_ext(mphysicalSystem,  r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list);
-	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list);
+	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height, 3, rotatingBody, mass, p_cylinder_int_list);
 	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list, p_list_pos,p_radius);
 
 }
@@ -424,7 +428,24 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 	
 	p_surface->Reset();
 	p_surface->Resize(0);
+	int nb_bille_surf = 0;
 	ChVectorDynamic<std::shared_ptr<ChBody>> list_surf;
+	list_surf.Resize(p_beads_list->size());
+	std::shared_ptr<ChBody> test = (*p_beads_list)[0];
+	
+	for (int j = 0; j < p_beads_list->size(); j++) {
+		if ((*p_beads_list)[j]->GetPos().y() > test->GetPos().y()) {
+			test = (*p_beads_list)[j];
+		}
+	}
+	for (int j = 0; j < p_beads_list->size(); j++) {
+		if ((*p_beads_list)[j]->GetPos().y() > test->GetPos().y() - 2 * (r_bead + r_bead / 100)) {
+			list_surf.SetElementN(nb_bille_surf, (*p_beads_list)[j]);
+			nb_bille_surf = nb_bille_surf + 1;
+		}
+	}
+
+	/*ChVectorDynamic<std::shared_ptr<ChBody>> list_surf;
 	int nb_bille_surf = 0;
 	list_surf.Resize(p_beads_list->size());
 	for (int i = 0; i<p_beads_list->size(); ++i) {
@@ -439,18 +460,22 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 			double y2 = (*p_beads_list)[j]->GetPos().y();
 			double x2 = (*p_beads_list)[j]->GetPos().x();
 			double z2 = (*p_beads_list)[j]->GetPos().z();
-			/*if ((y2 > y + 2* r_bead) && sqrt((x2-x)*(x2-x)+(z2-z)*(z2-z))<r_bead/2 && au_dessus==false) {
-				au_dessus = true;
-			}*/
-			if ((y2 > y + 2 * r_bead) && au_dessus == false) {
+			//GetLog() << "\ndistance x-z  = " << sqrt((x2 - x)*(x2 - x) + (z2 - z)*(z2 - z)) << "\t" << r_bead/2;
+
+			if ((y2 > y) && sqrt((x2-x)*(x2-x)+(z2-z)*(z2-z))<2*(r_bead-r_bead/100) && au_dessus==false) {
+				//printf("\n on rentre dans le if");
 				au_dessus = true;
 			}
-		}
+			/*if ((y2 > y + 2 * r_bead) && au_dessus == false) {
+				au_dessus = true;
+			}*/
+		/*}
 		if (au_dessus == false) {
 			list_surf.SetElementN(nb_bille_surf,(*p_beads_list)[i]);
 			nb_bille_surf = nb_bille_surf + 1;
 		}
-	}
+	}*/
+	GetLog() << "\nNumTotal = " << p_beads_list->size();
 	GetLog() << "\nNum Surface = " << nb_bille_surf;
 	
 	p_surface->Resize(nb_bille_surf);
@@ -497,7 +522,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
-	bool dontcare = false;
+	bool dontcare = true;
 	std::string projname = "_tc_run"; 
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
@@ -518,9 +543,10 @@ int main(int argc, char* argv[]) {
 	double height_bead = 4.5;
 	double rho = 2.55;
 	double mass = rho*(4/3)*CH_C_PI*pow(r_bead,3);
-	double rotation_speed =0.09;
+	double rotation_speed =CH_C_PI/2.0;//0.096
 	
-	std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
+	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
+	std::string path = out_dir + "/../TEMP_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 	fichier >> gravity >> r_bead>> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 	
@@ -557,7 +583,7 @@ int main(int argc, char* argv[]) {
 		ChIrrWizard::add_typical_Logo(application.GetDevice());
 		ChIrrWizard::add_typical_Sky(application.GetDevice());
 		ChIrrWizard::add_typical_Lights(application.GetDevice());
-		ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 30, 0));
+		ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0,20 , 0));
 	#endif
 	
 	// Create all the rigid bodies.
@@ -587,7 +613,7 @@ int main(int argc, char* argv[]) {
 	
 	read_pos(p_list_position,p_list_radius, path);
 	set_up(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list, p_beads_list, rotation_speed, p_list_position,p_list_radius);
-	 
+	printf("tout a bien ete cree\n");
 	ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface(0);
 	ChVectorDynamic<std::shared_ptr<ChBody>> surface = ChVectorDynamic<std::shared_ptr<ChBody>>(0);
 	p_surface = &surface;
@@ -603,7 +629,7 @@ int main(int argc, char* argv[]) {
 	collision::ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead / 2);
 	
 	velocity_profile << "0" << " " << "0" << " " << "id_frame" << " " << "id_part" << " " << "v_r" << " " << "v_t" << " " << "r" << "\n";
-	all_data_surface << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
+	all_data_surface << "time" << " " << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
 	
 	// Create an exporter to POVray and set all associated filepaths and settings 
 	ChPovRay pov_exporter = ChPovRay(&mphysicalSystem);
@@ -627,7 +653,7 @@ int main(int argc, char* argv[]) {
 	int id_frame = 0;
 
 	while (time < time_sim) {
-
+		printf("nb bille = %i \n", p_beads_list->size());
 		#ifdef CHRONO_IRRLICHT
 			application.BeginScene(true, true, SColor(255, 255, 255, 255));
 			application.GetDevice()->run();
@@ -635,16 +661,16 @@ int main(int argc, char* argv[]) {
 		#endif
 		
 		detect_surface(p_beads_list, p_surface, r_bead);
-		
-		for (int j = 0; j < p_surface->GetLength(); j++) {
-			fprintf(stderr, "taille surface : %i\n", p_surface->GetLength());
 			
+		printf("on arrive apres la detection surface\n");
+		for (int j = 0; j < p_surface->GetLength(); j++) {
+			//fprintf(stderr, "taille surface : %i\n", p_surface->GetLength());
+			printf("taille surface : %i\n", p_surface->GetLength());
 			std::shared_ptr<ChBody> p_body = p_surface->GetElementN(j);
 			ChVector<> vitesse =p_body->GetPos();
 			double test = vitesse.x();
+			printf("time = %f\n", time);
 			
-			fprintf(stderr, "on arrive la\n");
-			fprintf(stderr, "on arrive la : %f\n", test);
 			
 			double v_x = p_surface->GetElementN(j)->GetPos_dt().x();
 			double v_y = p_surface->GetElementN(j)->GetPos_dt().y();
@@ -659,9 +685,10 @@ int main(int argc, char* argv[]) {
 			int id = p_surface->GetElementN(j)->GetIdentifier();
 			
 			velocity_profile << 0 << " " << 0 << " " << id_frame << " " << id << " " << v_r << " " << v_t << " " <<r << "\n";
-			all_data_surface << id << " " << x << " " << y << " " << z << " " << v_x << " " << v_y << " " << v_z << " " << "\n";
+			all_data_surface << time << " " << id << " " << x << " " << y << " " << z << " " << v_x << " " << v_y << " " << v_z << " " << "\n";
 		}
 		
+
 		id_frame = id_frame + 1;
 		while (time == 0 || time < out_time) {
 			mphysicalSystem.DoStepDynamics(time_step);

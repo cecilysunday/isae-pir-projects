@@ -158,7 +158,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	body->SetPos_dt(init_vel);
 
 	//Fix the bead if it is a bead of the outer cylinder
-	if (isFixed == true) {
+	if (isWall == true) {
 		body->SetBodyFixed(true);
 	}
 	else {
@@ -197,7 +197,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 		}
 		else {
 			text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
-			body->SetId(i);
+			
 		}
 		body->AddAsset(text);
 	}
@@ -223,7 +223,7 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 	
 	if (methode == 1) { //Columns arrangement
 		
-		for (int i = 0; i < floor(CH_C_PI*(r_cyl_ext-r_bead) / r_bead) ; i++) {
+		for (int i = 0; i < floor(CH_C_PI*(r_cyl_ext-r_bead) / r_bead)+1 ; i++) {
 			for (int j = 0; j < floor(height / (2 * r_bead)); j = j++) {
 				ChVector <> pos = ChVector<>((r_cyl_ext - r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
 				create_bead(r_bead, mphysicalSystem, pos, mass,true,true,p_list,p_ray);
@@ -244,12 +244,12 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 	}
 
 	else if (methode == 3) { //Compact arrangement
-		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
+		for (int j = 0; j < floor((height - r_bead) / (sqrt(3) * r_bead)); j = j + 2) {
 			for (int i = 0; i < floor((CH_C_PI*(r_cyl_ext-r_bead)) / r_bead)+1  ; i++) {
 				ChVector<> pos= ChVector<>((r_cyl_ext - r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
 				
 				create_bead(r_bead, mphysicalSystem, pos, mass,true,true,p_list,p_ray);
-				if (j + 1 < floor(height / (2 * r_bead))) {
+				if (j + 1 < floor((height - r_bead) / (sqrt(3) * r_bead))) {
 					ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos2, mass, true, true, p_list,p_ray);
 				}
@@ -262,73 +262,50 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 }
 
 //Creates the beads of the inner cylinder and gives it a specific texture. Add all the beads to the list pointed by p_list. Fix the beads to rotatingBody. 
-void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double height, int methode, std::shared_ptr<chrono::ChBodyFrame> rotatingBody, double mass, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector <double>* p_ray) {
+void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double height, int methode, double mass, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector <double>* p_ray) {
 	
 	if (methode == 1) { //Column arrangement
-		for (int i = 0; i < floor((CH_C_PI*(r_cyl_int+r_bead)) / r_bead) ; i++) {
+		for (int i = 0; i < floor((CH_C_PI*(r_cyl_int+r_bead)) / r_bead)+1; i++) {
 			for (int j = 0; j < floor(height / (2 * r_bead)); j++) {
 				
 				//Calculation of positions of all the beads
-				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / r_cyl_int))), r_bead * 2 * j + r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / r_cyl_int))));
+				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int+r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int+r_bead)))));
 				create_bead(r_bead, mphysicalSystem, pos, mass,false, true, p_list,p_ray);
-				
-				//Creation of the link between the bead and the inner cylinder (embedment)
-				auto lock = std::make_shared<ChLinkMateFix>();
-				lock->Initialize(mphysicalSystem.Get_bodylist().back(), rotatingBody);
-				mphysicalSystem.AddLink(lock);
 			}
 		}
 	}
 
 	else if (methode == 2) { //More compact arrangement
 		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
-			for (int i = 0; i < floor((CH_C_PI*(r_cyl_int+r_bead)) / r_bead) +1; i++) {
+			for (int i = 0; i < floor((CH_C_PI*(r_cyl_int+r_bead)) / r_bead)+1; i++) {
 				
 				//Calculation of positions of all the beads
 				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
 				create_bead(r_bead, mphysicalSystem, pos, mass,false,true, p_list,p_ray);
-				
-				//Creation of the link between the bead and the inner cylinder (embedment)
-				auto lock = std::make_shared<ChLinkMateFix>();
-				lock->Initialize(mphysicalSystem.Get_bodylist().back(), rotatingBody);
-				mphysicalSystem.AddLink(lock);
 
 				if (j + 1 < floor(height / (2 * r_bead))) {
 					//Calculation of positions of all the beads
 					ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))), r_bead * 2 * (j + 1) + r_bead, (r_cyl_int + r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos2, mass, false, true, p_list,p_ray);
 
-					//Creation of the link between the bead and the inner cylinder (embedment)
-					auto lock2 = std::make_shared<ChLinkMateFix>();
-					lock2->Initialize(mphysicalSystem.Get_bodylist().back(), rotatingBody);
-					mphysicalSystem.AddLink(lock2);
 				}
 			}
 		}
 	}
 
 	else if (methode == 3) { //Compact arrangement
-		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
+		for (int j = 0; j < floor((height-r_bead) / (sqrt(3) * r_bead)); j = j + 2) {
 			for (int i = 0; i < floor(CH_C_PI*(r_cyl_int+r_bead) / r_bead) +1; i++) {
 
 				//Calculation of positions of all the beads
 				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * j + r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
 				create_bead(r_bead, mphysicalSystem, pos, mass,false,true, p_list,p_ray);
 
-				//Creation of the link between the bead and the inner cylinder (embedment)
-				auto lock = std::make_shared<ChLinkMateFix>();
-				lock->Initialize(mphysicalSystem.Get_bodylist().back(), rotatingBody);
-				mphysicalSystem.AddLink(lock);
-
-				if (j + 1 < floor(height / (2 * r_bead))) {
+				if (j + 1 < floor((height-r_bead) / (sqrt(3)* r_bead))) {
 					//Calculation of positions of all the beads
 					ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_int + r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos2, mass, false, true, p_list,p_ray);
 
-					//Creation of the link between the bead and the inner cylinder (embedment)
-					auto lock2 = std::make_shared<ChLinkMateFix>();
-					lock2->Initialize(mphysicalSystem.Get_bodylist().back(), rotatingBody);
-					mphysicalSystem.AddLink(lock2);
 				}
 			}
 		}
@@ -345,12 +322,13 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 	int id = 0;
 	if (methode == 1) {//Column arrangement
 		
-		for (int k = 0; k < floor(((r_cyl_ext-r_bead) - (r_cyl_int+r_bead)) / (2*r_bead))-1; k++) {
-			for (int j = 0; j < floor(height_bead / ( r_bead)); j = j + 2) {
+		for (int k = 0; k < floor(((r_cyl_ext-2*r_bead) - (r_cyl_int+2*r_bead)) / (2*r_bead)); k++) {
+			for (int j = 0; j < floor(height_bead / (2*r_bead)); j = j ++) {
 				for (int i = 0; i < floor((CH_C_PI*(r_cyl_int + 3 * r_bead + 2 * k*r_bead)) / r_bead) ; i++) {
 					
 					//Calculation of positions of all the beads
-					ChVector <> pos = ChVector<>((r_cyl_int+3*r_bead+2*k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), r_bead  * j + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
+
+					ChVector <> pos = ChVector<>((r_cyl_int+3*r_bead+2*k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), r_bead  * 2*j + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,p_ray,id, has_velocity);
 					
 					id = id + 1;
@@ -381,7 +359,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 
 	 else if (methode == 3) { //Compact arrangement
 		for (int k = 0; k < floor(((r_cyl_ext - r_bead) - (r_cyl_int + r_bead)) / (2 * r_bead)) - 1; k++) {
-			for (int j = 0; j < floor(height_bead / (2 * r_bead)); j = j + 2) {
+			for (int j = 0; j < floor((height_bead - r_bead) / (sqrt(3) * r_bead)); j = j + 2) {
 				for (int i = 0; i < floor((CH_C_PI*(r_cyl_int + 3 * r_bead + 2 * k*r_bead)) / r_bead) + 1; i++) {
 
 					//Calculation of positions of all the beads
@@ -390,7 +368,7 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 					create_bead(r_bead, mphysicalSystem, pos, mass, false, false, p_list,p_ray,id, has_velocity);
 					id = id + 1;
 
-					if (j + 1 < floor(height_bead / (2 * r_bead))) {
+					if (j + 1 < floor((height_bead - r_bead) / (sqrt(3) * r_bead))) {
 						//Calculation of positions of all the beads
 						ChVector<> pos2 = ChVector<>((r_cyl_int + 3 * r_bead + 2 * k*r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), sqrt(3)*r_bead * (j + 1) + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
 						create_bead(r_bead, mphysicalSystem, pos2, mass, false, false, p_list,p_ray,id,has_velocity);
@@ -434,7 +412,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	fixedBody->AddAsset(box1);
 	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, -0.5, 0));
 
-	//Creation of the seiling
+	//Creation of the ceiling
 	auto box2 = std::make_shared<ChBoxShape>();
 	box2->GetBoxGeometry().Pos = ChVector<>(0, height + 0.5, 0);
 	box2->GetBoxGeometry().Size = hsize;
@@ -442,44 +420,31 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	box2->SetFading(0.6f);
 	fixedBody->AddAsset(box2);
 
+	//Creation of the inner cylinder
+	auto box3 = std::make_shared<ChCylinderShape>();
+	box3->GetCylinderGeometry().rad = r_cyl_int;
+	box3->GetCylinderGeometry().p1 = ChVector<>(0, height, 0);
+	box3->GetCylinderGeometry().p2 = ChVector<>(0, 0, 0);
+	box3->SetColor(ChColor(0, 0, 1));
+	box3->SetFading(0.6f);
+	fixedBody->AddAsset(box3);
+
 	//End of settings the collision parameters of the ground + seiling body
 	fixedBody->GetCollisionModel()->AddBox(hsize.x(), hsize.y(), hsize.z(), ChVector<>(0, height + 0.5, 0));
+	fixedBody->GetCollisionModel()->AddCylinder(r_cyl_int, height / 2, r_cyl_int, ChVector<>(0, 0, 0));
 	fixedBody->GetCollisionModel()->BuildModel();
 
 	mphysicalSystem.AddBody(fixedBody);
 
-	// Add the inner cylinder
-
-	auto rotatingBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-
-	rotatingBody->SetMass(10.0);
-	rotatingBody->SetInertiaXX(ChVector<>(50, 50, 50));
-	rotatingBody->SetPos(ChVector<>(0, 0, 0));
-	rotatingBody->SetCollide(true);
-	rotatingBody->SetMaterialSurface(material);
-
-	rotatingBody->GetCollisionModel()->ClearModel();
-	rotatingBody->GetCollisionModel()->AddCylinder(r_cyl_int, r_cyl_int, height, rotatingBody->GetPos(), rotatingBody->GetRot());
-	rotatingBody->GetCollisionModel()->BuildModel();
-
-	auto box = std::make_shared<ChCylinderShape>();
-	box->GetCylinderGeometry().rad = r_cyl_int;
-	box->GetCylinderGeometry().p1 = ChVector<>(0, height, 0);
-	box->GetCylinderGeometry().p2 = ChVector<>(0, 0, 0);
-	box->SetColor(ChColor(0, 0, 1));
-	box->SetFading(0.6f);
-	rotatingBody->AddAsset(box);
-
-	mphysicalSystem.AddBody(rotatingBody);
 
 	// optional, attach a texture for better visualization
 	auto mtexture = std::make_shared<ChTexture>();
 	mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
-	rotatingBody->AddAsset(mtexture);
+	fixedBody->AddAsset(mtexture);
 
 	//creation of all the set-up
 	create_cylinder_ext(mphysicalSystem, r_bead, r_cyl_ext, height, 3, mass, p_cylinder_ext_list, p_ray);
-	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, rotatingBody, mass, p_cylinder_int_list, p_ray);
+	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, mass, p_cylinder_int_list, p_ray);
 	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true, p_ray);
 }
 
@@ -535,11 +500,11 @@ int main(int argc, char* argv[]) {
 
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
-	double r_bead = 0.2;
-	double r_cyl_ext = 10;
-	double r_cyl_int = 5;
-	double height = 5;
-	double height_bead = 4.5;
+	double r_bead = 0.5;//0.2
+	double r_cyl_ext = 5;//100
+	double r_cyl_int = 2;//50
+	double height = 9;//5
+	double height_bead = 7;//4.5
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
 	
@@ -581,7 +546,7 @@ int main(int argc, char* argv[]) {
 		ChIrrWizard::add_typical_Logo(application.GetDevice());
 		ChIrrWizard::add_typical_Sky(application.GetDevice());
 		ChIrrWizard::add_typical_Lights(application.GetDevice());
-		ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 0, r_cyl_ext * 2.5)); //30
+		ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(15,-2, 0)); //30
 	#endif
 
 	// Create all the rigid bodies.
@@ -631,7 +596,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Error creating povray data paths\n");
 		return -1;
 	}
-	SetPovrayParameters(&pov_exporter, 0, 0, 30);
+	SetPovrayParameters(&pov_exporter, 0, 0, r_cyl_ext*2.5);
 
 	#ifdef CHRONO_IRRLICHT
 		// Use this function for adding a ChIrrNodeAsset to all items
@@ -669,7 +634,7 @@ int main(int argc, char* argv[]) {
 		printf("time : %f\n",time);
 		fprintf(stderr, "mean_v : %f\n", mean_vector(p_tab_v));
 		fprintf(stderr, "time : %f\n",time);
-
+		printf("nombre de bille : %d", p_beads_list->size());
 		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
 
 		if ((mean_vector(p_tab_v) < 0.001 && in_mouvement == true) || time > time_sim) {
