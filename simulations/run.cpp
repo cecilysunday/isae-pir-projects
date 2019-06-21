@@ -543,7 +543,7 @@ int main(int argc, char* argv[]) {
 	double height_bead = 4.5;
 	double rho = 2.55;
 	double mass = rho*(4/3)*CH_C_PI*pow(r_bead,3);
-	double rotation_speed =CH_C_PI/2.0;//0.096
+	double rotation_speed =0.096;//0.096
 	
 	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
 	std::string path = out_dir + "/../TEMP_tc_set";
