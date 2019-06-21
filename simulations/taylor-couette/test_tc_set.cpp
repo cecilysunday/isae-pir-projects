@@ -17,10 +17,9 @@
 // =============================================================================
 
 #include "chrono/ChConfig.h"
+#include "chrono_parallel/physics/ChSystemParallel.h""
+#include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/physics/ChBody.h"
-#include "chrono_parallel/physics/ChSystemParallel.h"
-//#include "chrono/utils/ChUtilsCreators.h"
-//#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
 #include "chrono/assets/ChTexture.h"
 #include "chrono_postprocess/ChPovRay.h"
@@ -404,7 +403,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x, double y, double z) {
 
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
-	bool dontcare = true;
+	bool dontcare = false;
 	std::string projname = "_tc_set";
 
 	const std::string out_dir = SetDataPath(projname, dontcare);

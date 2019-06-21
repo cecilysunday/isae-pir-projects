@@ -35,7 +35,6 @@
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
-using namespace std::experimental::filesystem;
 
 #ifdef CHRONO_IRRLICHT
 	#include <irrlicht.h>
