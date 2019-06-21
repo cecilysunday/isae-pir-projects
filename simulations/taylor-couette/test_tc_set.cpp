@@ -417,10 +417,10 @@ int main(int argc, char* argv[]) {
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
 	double r_bead = 0.2;// 0.5, 0.2
-	double r_cyl_ext = 10;//5, 100
-	double r_cyl_int = 5;//2, 50
-	double height = 7;//9, 5
-	double height_bead = 5;//7, 4.5
+	double r_cyl_ext = 5;//5, 10, 100
+	double r_cyl_int = 2.5;//2, 5, 50
+	double height = 2.5;//9, 7, 5
+	double height_bead = 2.5;//7, 5, 4.5
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
 	
@@ -520,7 +520,7 @@ int main(int argc, char* argv[]) {
 	double i = 0.0;
 	bool motor_launched = false;
 	int id_frame = 0;
-	double time_sim = 1.5;
+	double time_sim = 1.25;
 	
 	while (time<time_sim) {
 
@@ -539,13 +539,13 @@ int main(int argc, char* argv[]) {
 			application.EndScene();
 		#endif
 
-		create_array_velocity(p_beads_list, p_tab_v);
-		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
+		//create_array_velocity(p_beads_list, p_tab_v);
+		//mean_v << time << " " << mean_vector(p_tab_v) << "\n";
 		//fprintf(stderr, "time : %f \tmean_v : %f\n", time, mean_vector(p_tab_v));
 		
 		pov_exporter.ExportData();
 
-		if (mean_vector(p_tab_v) < 0.001) break;
+		//if (mean_vector(p_tab_v) < 0.001) break;
 		out_time = time - time_step + out_step;
 	}
 
