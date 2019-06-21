@@ -116,14 +116,14 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	body->SetInertiaXX(0.4 * mass * r_bead * r_bead * ChVector<>(1, 1, 1));
 	auto sphere = std::make_shared<ChSphereShape>();
 	sphere->GetSphereGeometry().rad = r_bead;
-	sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
+	//sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
 	body->AddAsset(sphere);
 
 
 	auto text = std::make_shared<ChTexture>();
 	auto mvisual = std::make_shared<ChColorAsset>();
 	
-	body->AddAsset(mvisual);
+	//body->AddAsset(mvisual);
 	
 	if (isWall == true) {
 		mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));

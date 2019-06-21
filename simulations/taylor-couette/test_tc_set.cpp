@@ -61,7 +61,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	
 	//Creation of the surface material
 	auto material = std::make_shared<ChMaterialSurfaceSMC>();
-	material->SetRestitution(0.1f);
+	material->SetRestitution(0.6f);
 	material->SetFriction(0.4f);
 	material->SetAdhesion(0);
 
@@ -71,6 +71,8 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	body->SetPos(pos);
 	body->SetRot(rot);
 	body->SetPos_dt(init_vel);
+	body->SetMaterialSurface(material);
+	body->SetCollide(true);
 
 	//Fix the bead if it is a bead of the outer cylinder
 	if (isWall == true) {
@@ -79,18 +81,14 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	else {
 		body->SetBodyFixed(false);
 	}
-	body->SetMaterialSurface(material);
-	body->SetCollide(true);
 
-	
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator(seed);
 
 	std::normal_distribution<double> distribution(r_bead, r_bead/100);
 	double ray = distribution(generator);
+	
 	//Sets the collision parameters
-	body->SetMaterialSurface(material);
-	body->SetCollide(true);
 	body->GetCollisionModel()->ClearModel();
 	body->GetCollisionModel()->AddSphere(ray);
 	body->GetCollisionModel()->BuildModel();
@@ -102,19 +100,19 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	if (isWall == false || isFixed == false) {
 		auto sphere = std::make_shared<ChSphereShape>();
 		sphere->GetSphereGeometry().rad = r_bead;
-		sphere->SetColor(ChColor(0.9f, 0.4f, 0.2f));
 		body->AddAsset(sphere);
 
-
 		auto text = std::make_shared<ChTexture>();
+		auto mvisual = std::make_shared<ChColorAsset>();
+
 		if (isWall == true) {
-			text->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+			mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));
+			body->AddAsset(mvisual);
 		}
 		else {
 			text->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
-			
+			body->AddAsset(text);
 		}
-		body->AddAsset(text);
 	}
 	
 	//Gives a random velocity to the bead
@@ -132,6 +130,7 @@ void create_bead(double r_bead, ChSystemParallelSMC& mphysicalSystem, ChVector<>
 	p_list->push_back(body);
 	mphysicalSystem.AddBody(body);
 }
+
 
 //Creates the beads of the outer cylinder and makes it invisible for the visualization. Add all the beads to the list pointed by p_list
 void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_ext,double height, int methode, double mass, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector <double>* p_ray) {
@@ -176,6 +175,7 @@ void create_cylinder_ext(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 	
 }
 
+
 //Creates the beads of the inner cylinder and gives it a specific texture. Add all the beads to the list pointed by p_list. Fix the beads to rotatingBody. 
 void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double height, int methode, double mass, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector <double>* p_ray) {
 	
@@ -202,7 +202,6 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 					//Calculation of positions of all the beads
 					ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))), r_bead * 2 * (j + 1) + r_bead, (r_cyl_int + r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))));
 					create_bead(r_bead, mphysicalSystem, pos2, mass, false, true, p_list,p_ray);
-
 				}
 			}
 		}
@@ -227,7 +226,6 @@ void create_cylinder_int(ChSystemParallelSMC& mphysicalSystem, double r_bead, do
 	}
 
 	else fprintf(stderr, "La methode rentree est incorrecte\n");
-
 }
 
 
@@ -295,8 +293,8 @@ void remplir(ChSystemParallelSMC& mphysicalSystem,  double r_bead, double r_cyl_
 	}
 
 	 else fprintf(stderr, "La methode demandee est incorrecte\n");
-
 }
+
 
 //Create all the experimental set-up
 void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_cylinder_ext_list, std::vector< std::shared_ptr< ChBody > >* p_cylinder_int_list, std::vector< std::shared_ptr< ChBody > >* p_beads_list, std::shared_ptr<ChLinkMotorRotationSpeed>* motor, std::vector <double>* p_ray) {
@@ -309,7 +307,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 
 	//Creation of the ground + seiling body
 	auto fixedBody = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-	fixedBody->SetMass(1.0);
+	fixedBody->SetMass(10.0);
 	fixedBody->SetBodyFixed(true);
 	fixedBody->SetPos(ChVector<>());
 
@@ -351,7 +349,6 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 
 	mphysicalSystem.AddBody(fixedBody);
 
-
 	// optional, attach a texture for better visualization
 	auto mtexture = std::make_shared<ChTexture>();
 	mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
@@ -362,6 +359,7 @@ void create_some_falling_items(ChSystemParallelSMC& mphysicalSystem, double r_cy
 	create_cylinder_int(mphysicalSystem, r_bead, r_cyl_int, height_bead, 3, mass, p_cylinder_int_list, p_ray);
 	remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 1, height_bead, p_beads_list, true, p_ray);
 }
+
 
 //Fills a ChVectorDynamic with the velocity of all the beads that are in the list pointed by p_beads_list
 void create_array_velocity(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<double>* p_tab_v) {
@@ -377,6 +375,7 @@ void create_array_velocity(std::vector< std::shared_ptr< ChBody > >* p_beads_lis
 	
 }
 
+
 //calculate the mean of the vector pointed by p_vector
 double mean_vector(ChVectorDynamic<double>* p_vector) {
 	double s = 0;
@@ -385,6 +384,7 @@ double mean_vector(ChVectorDynamic<double>* p_vector) {
 	}
 	return s / p_vector->GetLength();
 }
+
 
 void SetPovrayParameters(ChPovRay* pov_exporter, double x, double y, double z) {
 	// Modify the default light and camera
@@ -399,6 +399,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x, double y, double z) {
 	pov_exporter->AddAll();
 	pov_exporter->ExportScript();
 }
+
 
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
@@ -415,11 +416,11 @@ int main(int argc, char* argv[]) {
 
 	//Déclaration des paramètres
 	double gravity = -9.81E2;
-	double r_bead = 0.5;//0.2
-	double r_cyl_ext = 5;//100
-	double r_cyl_int = 2;//50
-	double height = 9;//5
-	double height_bead = 7;//4.5
+	double r_bead = 0.2;// 0.5, 0.2
+	double r_cyl_ext = 10;//5, 100
+	double r_cyl_int = 5;//2, 50
+	double height = 7;//9, 5
+	double height_bead = 5;//7, 4.5
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
 	
@@ -486,7 +487,7 @@ int main(int argc, char* argv[]) {
 	p_radius_list = &radius_list;
 	
 	create_some_falling_items(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list,p_beads_list, motor,p_radius_list);
-	printf("nombre de billes : %i\n", p_beads_list->size());
+	//printf("nombre de billes : %i\n", p_beads_list->size());
 	fprintf(stderr, "nombre de billes : %i\n", p_beads_list->size());
 	ChVectorDynamic<double>* p_tab_v_cyl_int(0);
 	ChVectorDynamic<double> tab_v_cyl_int = ChVectorDynamic<double>(0);
@@ -500,10 +501,6 @@ int main(int argc, char* argv[]) {
 	std::string datafile = out_dir + "/mean_v_data.dat";
 	ChStreamOutAsciiFile mean_v(datafile.c_str());
 	mean_v << "time" << " " << "mean_v" << "\n";
-
-	std::string datafile2 = out_dir + "/position.dat";
-	std::ofstream position(datafile2, std::ios::out | std::ios::trunc);
-	//position << "x" << " " << "y" << " " << "z" << " " << "radius" << "\n";
 	
 	// Create an exporter to POVray and set all associated filepaths and settings 
 	ChPovRay pov_exporter = ChPovRay(&mphysicalSystem);
@@ -513,19 +510,15 @@ int main(int argc, char* argv[]) {
 	}
 	SetPovrayParameters(&pov_exporter, 0, 0, r_cyl_ext*2.5);
 
+	// Use this function for adding a ChIrrNodeAsset to all items and for 'converting' assets into Irrlicht meshes.
 	#ifdef CHRONO_IRRLICHT
-		// Use this function for adding a ChIrrNodeAsset to all items
-		// Otherwise use application.AssetBind(myitem); on a per-item basis.
 		application.AssetBindAll();
-
-		// Use this function for 'converting' assets into Irrlicht meshes
 		application.AssetUpdateAll();
 	#endif
 	
 	// THE SOFT-REAL-TIME CYCLE
 	double i = 0.0;
 	bool motor_launched = false;
-	bool in_mouvement = true;
 	int id_frame = 0;
 	double time_sim = 1.5;
 	
@@ -538,43 +531,41 @@ int main(int argc, char* argv[]) {
 		#endif
 
 		while (time == 0 || time < out_time) {
-			
 			mphysicalSystem.DoStepDynamics(time_step);
 			time += time_step;
 		}
-
-		create_array_velocity(p_beads_list, p_tab_v);
-
-		printf("mean_v : %f\n", mean_vector(p_tab_v));
-		printf("time : %f\n",time);
-		fprintf(stderr, "mean_v : %f\n", mean_vector(p_tab_v));
-		fprintf(stderr, "time : %f\n",time);
-		printf("nombre de bille : %d", p_beads_list->size());
-		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
-
-		if ((mean_vector(p_tab_v) < 0.001 && in_mouvement == true) || time > time_sim) {
-			in_mouvement = false;
-			if (position) {
-				for (int j = 0; j < p_beads_list->size(); j++) {
-					position << (*p_beads_list)[j]->GetPos().x() << " " << (*p_beads_list)[j]->GetPos().y() << " " << (*p_beads_list)[j]->GetPos().z() << " " << (*p_radius_list)[j] << "\n";
-					printf("rayon : %f\n", (*p_radius_list)[j]);
-				}
-				
-				position << -100000000 << " " << -100000000 << " " << -100000000 << -100000000 << "\n";
-				position.close();
-			}
-			printf("Les positions ont bien ete enregistrees\n");
-			time = time_sim + 1.0;
-		}
-		
-		pov_exporter.ExportData();
 
 		#ifdef CHRONO_IRRLICHT
 			application.EndScene();
 		#endif
 
+		create_array_velocity(p_beads_list, p_tab_v);
+		mean_v << time << " " << mean_vector(p_tab_v) << "\n";
+		//fprintf(stderr, "time : %f \tmean_v : %f\n", time, mean_vector(p_tab_v));
+		
+		pov_exporter.ExportData();
+
+		if (mean_vector(p_tab_v) < 0.001) break;
 		out_time = time - time_step + out_step;
 	}
+
+	fprintf(stderr, "time : %f \tmean_v : %f\n", time, mean_vector(p_tab_v));
+
+	std::string datafile2 = out_dir + "/position.dat";
+	std::ofstream position(datafile2, std::ios::out | std::ios::trunc);
+
+	if (position) {
+		for (int j = 0; j < p_beads_list->size(); j++) {
+			position << (*p_beads_list)[j]->GetPos().x() << " " << (*p_beads_list)[j]->GetPos().y() << " " << (*p_beads_list)[j]->GetPos().z() << " " << (*p_radius_list)[j] << "\n";
+			printf("rayon : %f\n", (*p_radius_list)[j]);
+		}
+
+		position << -100000000 << " " << -100000000 << " " << -100000000 << -100000000 << "\n";
+		position.close();
+	}
+
+	fprintf(stderr, "Les positions ont bien ete enregistrees\n");
+
 	return 0;
 }
 
