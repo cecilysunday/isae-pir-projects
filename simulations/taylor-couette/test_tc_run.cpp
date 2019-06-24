@@ -338,6 +338,7 @@ void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVe
 			test = (*p_beads_list)[j];
 		}
 	}
+
 	for (int j = 0; j < p_beads_list->size(); j++) {
 		if ((*p_beads_list)[j]->GetPos().y() > test->GetPos().y() - 2 * (r_bead + r_bead / 100)) {
 			list_surf.SetElementN(nb_bille_surf, (*p_beads_list)[j]);
@@ -427,7 +428,7 @@ int main(int argc, char* argv[]) {
 
 	double time = 0;
 	double out_time = 0;
-	double time_sim = 3.0;
+	double time_sim = 10.0;
 
 	// Create a ChronoENGINE physical system
 	ChSystemParallelSMC mphysicalSystem;
@@ -439,7 +440,7 @@ int main(int argc, char* argv[]) {
 	mphysicalSystem.GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
 	mphysicalSystem.GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 
-	mphysicalSystem.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+	mphysicalSystem.GetSettings()->collision.bins_per_axis = vec3(20, 20, 20);
 	mphysicalSystem.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R; /// Types: NARROWPHASE_HYBRID_MPR, NARROWPHASE_R, NARROWPHASE_MPR
 
 	mphysicalSystem.ChangeCollisionSystem(CollisionSystemType::COLLSYS_PARALLEL); /// Types:: COLLSYS_PARALLEL, COLLSYS_BULLET_PARALLEL

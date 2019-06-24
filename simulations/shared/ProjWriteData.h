@@ -22,21 +22,9 @@ typedef struct {
 	double vel_x;
 	double vel_y;
 	double vel_z;
-	double acc_x;
-	double acc_y;
-	double acc_z;
 	double rot_vel_x;
 	double rot_vel_y;
 	double rot_vel_z;
-	double rot_acc_x;
-	double rot_acc_y;
-	double rot_acc_z;
-	double force_x;
-	double force_y;
-	double force_z;
-	double torque_x;
-	double torque_y;
-	double torque_z;
 } ParticleData;
 
 
