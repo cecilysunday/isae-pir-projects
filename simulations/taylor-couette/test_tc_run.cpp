@@ -37,6 +37,7 @@ using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::postprocess;
 
+#define BUFFER_SIZE 1
 
 
 // If IRRLICHT is enabled, add irrlicht headers and functions
@@ -74,49 +75,14 @@ using namespace chrono::postprocess;
 #endif
 
 
-//Read the position in a given file, and stock it into the list pointed by p_list_pos
-void read_pos(std::vector<ChVector<>>* p_list_pos,std::vector<double>* p_radius, const std::string set_path) {
-	
-	//fprintf(stderr, "On arrive avant de lire le fichier\n");
-	std::ifstream fichier(set_path + "/position.dat");
-	//fprintf(stderr, "On passe la lecture du fichier\n");
-
-	int i = 0;
-	bool end_of_doc = false;
-	double x;
-	double y;
-	double z;
-	double radius;
-	
-	while (end_of_doc==false){
-		
-		fichier >> x >> y>> z >> radius;
-		//fprintf(stderr, "(%f,%f,%f)", x, y, z);
-		if (x != -100000000 && y != -100000000 && z != -100000000 && radius != -100000000) {
-			p_list_pos->push_back(ChVector<>(x, y, z));
-			p_radius->push_back(radius);
-		}
-		else {
-			end_of_doc = true;
-		}
-		//fprintf(stderr, "On rentre dans la boucle : %i\n",i);
-		i = i + 1;
-	}
-}
-
-
-//std::pair<size_t, size_t> create_bead(double r_bead, ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat,
-//	ChVector<> pos, double mass, bool isFixed, bool isWall, std::vector< std::shared_ptr< ChBody > >* p_list, int i=0) {
-
 void create_bead(ChSystemParallelSMC* msystem, bool isWall, bool isFixed, double rad, double mass, ChVector<> pos) {
-
 	// Get start index of wall list
 	std::pair<size_t, size_t> prange;
 	prange.first = msystem->Get_bodylist().size();
 
 	long long int id = msystem->Get_bodylist().at(prange.first - 1)->GetIdentifier();
 	if (isWall) --id;
-	else if (~isWall && id < 0) id = 0;
+	else if (!isWall && id < 0) id = 0;
 	else ++id;
 
 	// Create a shared material for the particles
@@ -148,8 +114,26 @@ void create_bead(ChSystemParallelSMC* msystem, bool isWall, bool isFixed, double
 
 	// Get the end index of the particle list and return
 	prange.second = msystem->Get_bodylist().size() - 1;
-	GetLog() << "\n" << prange.first << "\t" << (int) id;
-	//GetLog() << "\nCHECK: num particles added = " << prange.second - prange.first + 1 << ", prange_first = " << prange.first << ", prange_second = " << prange.second;
+}
+
+
+std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, double mass, std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius) {
+	// Get start index of particle list
+	std::pair<size_t, size_t> prange;
+	prange.first = msystem->Get_bodylist().size();
+
+	// Add particles according to the position and radius provided by tc_set
+	for (int i = 0; i < p_list_pos->size(); i++) {
+		ChVector <> pos = (*p_list_pos)[i];
+		double radius = (*p_radius)[i];
+		create_bead(msystem, false, false, radius, mass, pos);
+	}
+
+	// Get the end index of the particle list and return
+	prange.second = msystem->Get_bodylist().size() - 1;
+	GetLog() << "\nCHECK: num_particles = " << prange.second - prange.first + 1 << ", prange_first = " << prange.first << ", prange_second = " << prange.second;
+
+	return prange;
 }
 
 
@@ -198,7 +182,6 @@ void create_cylinder_ext(ChSystemParallelSMC* msystem, double r_cyl_ext, double 
 
 
 void create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double height, double r_bead, double mass, int methode, std::shared_ptr<chrono::ChBodyFrame> rotatingBody) {
-	
 	//Remplissage en colonne
 	if (methode == 1) {
 		for (int i = 0; i < floor((CH_C_PI * (r_cyl_int + r_bead)) / r_bead) + 1; i++) {
@@ -261,17 +244,6 @@ void create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double 
 }
 
 
-/*void remplir(ChSystemParallelSMC& mphysicalSystem, double r_bead, double r_cyl_int, double r_cyl_ext, double mass, int methode, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_list, std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius) {
-	for (int i = 0; i < p_list_pos->size(); i++) {
-		ChVector <> pos = (*p_list_pos)[i];
-		double radius = (*p_radius)[i];
-		create_bead(radius, mphysicalSystem, pos, mass, false, false, p_list,i);
-	}
-
-}*/
-
-
-//std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass, double height_bead, std::vector< std::shared_ptr< ChBody > >* p_cylinder_ext_list, std::vector< std::shared_ptr< ChBody > >* p_cylinder_int_list, std::vector< std::shared_ptr< ChBody > >* p_beads_list, double rotation_speed, std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius) {
 std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass, double rotation_speed) {
 	// Get start index of the wall list
 	std::pair<size_t, size_t> wrange;
@@ -314,7 +286,7 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int,
 
 	// Find and return index range of wall list 
 	wrange.second = msystem->Get_bodylist().size() - 1;
-	GetLog() << "\nWall List Size = " << msystem->Get_bodylist().size();
+	GetLog() << "\nCHECK: num_walls = " << msystem->Get_bodylist().size();
 
 	return wrange;
 }
@@ -372,6 +344,25 @@ bool is_in_mouvement(std::vector< std::shared_ptr< ChBody > >* p_beads_list) {//
 	fprintf(stderr, "mean_v : %f\n", mean_v);
 	return (!(mean_v-1.0<0.0001 && mean_v-1.0>-0.0001) );
 }*/
+
+
+//Read the position in a given file, and stock it into the list pointed by p_list_pos
+void read_pos(std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius, const std::string set_path) {
+	int i = 0;
+	bool end_of_doc = false;
+	double x, y, z, radius;
+
+	std::ifstream fichier(set_path + "/position.dat");
+	while (end_of_doc == false) {
+		fichier >> x >> y >> z >> radius;
+		if (x != -100000000 && y != -100000000 && z != -100000000 && radius != -100000000) {
+			p_list_pos->push_back(ChVector<>(x, y, z));
+			p_radius->push_back(radius);
+		}
+		else end_of_doc = true;
+		i = i + 1;
+	}
+}
 
 
 void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, double z_cam) {
@@ -456,20 +447,20 @@ int main(int argc, char* argv[]) {
 	std::vector<double>* p_list_radius(0);
 	p_list_radius = &list_radius;
 
-	//read_pos(p_list_position, p_list_radius, path);
+	read_pos(p_list_position, p_list_radius, path);
 	
-	// Add the walls
+	// Add the shear-cell structure and fill the cell with particles according to tc_set inputs
 	double rotation_speed = 0.096;
-	std::pair<size_t, size_t> wrange = set_up(&msystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, rotation_speed); // , r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list, p_beads_list, rotation_speed, p_list_position, p_list_radius);
-	fprintf(stderr, "Tout a bien ete cree\n");
+	std::pair<size_t, size_t> wlist = set_up(&msystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, rotation_speed);
+	std::pair<size_t, size_t> plist = remplir(&msystem, mass, p_list_position, p_list_radius);
 
-	//remplir(mphysicalSystem, r_bead, r_cyl_int, r_cyl_ext, mass, 3, height_bead, p_beads_list, p_list_pos,p_radius);
+	size_t start_wlist = wlist.first;
+	size_t num_walls = wlist.second - start_wlist + 1;
 
+	size_t start_plist = wlist.second + 1;
+	size_t num_particles = plist.second - start_plist + 1;
 
-
-
-	
-	/*// Print simulation parameters to log file
+	// Print simulation parameters to log file
 	GetLog() << "\n" << "SYS, time_step, " << time_step
 			 << "\n" << "SYS, out_step, " << out_step
 			 << "\n" << "SYS, total_sim_time, " << time_sim
@@ -481,7 +472,7 @@ int main(int argc, char* argv[]) {
 	PrintSimParameters(&msystem);
 
 	// Create a 2D array of ParticleData structs to store state information throughout the simulation
-	ParticleData **cstate_data = new ParticleData*[num_particles];
+	/*ParticleData **cstate_data = new ParticleData*[num_particles];
 	for (size_t i = 0; i < num_particles; ++i) {
 		cstate_data[i] = new ParticleData[BUFFER_SIZE];
 		memset(cstate_data[i], 0, BUFFER_SIZE * sizeof(ParticleData));
@@ -501,45 +492,15 @@ int main(int argc, char* argv[]) {
 		auto application = SetSimVis(&msystem, time_step, vis, 20.0);
 	#endif
 
-
-
-
-
-	
-	/*// Create all the rigid bodies.
-	std::shared_ptr<ChLinkMotorRotationSpeed>* motor;
-	auto my_motor = std::make_shared<ChLinkMotorRotationSpeed>();
-	motor = &my_motor;
-
-	std::vector< std::shared_ptr< ChBody > > cylinder_ext_list;
-	std::vector< std::shared_ptr< ChBody > >* p_cylinder_ext_list(0);
-	p_cylinder_ext_list = &cylinder_ext_list;
-
-	std::vector< std::shared_ptr< ChBody > > cylinder_int_list;
-	std::vector< std::shared_ptr< ChBody > >* p_cylinder_int_list(0);
-	p_cylinder_int_list = &cylinder_int_list;
-
-	std::vector< std::shared_ptr< ChBody > > beads_list;
+	/*std::vector< std::shared_ptr< ChBody > > beads_list;
 	std::vector< std::shared_ptr< ChBody > >* p_beads_list(0);
 	p_beads_list = &beads_list;
-
-	std::vector< ChVector<> > list_position;
-	std::vector< ChVector<> >* p_list_position(0);
-	p_list_position = &list_position;
-
-	std::vector< double> list_radius;
-	std::vector<double>* p_list_radius(0);
-	p_list_radius = &list_radius;
-	
-	read_pos(p_list_position,p_list_radius, path);
-	set_up(mphysicalSystem, r_cyl_int, r_cyl_ext, height, r_bead, mass, height_bead, p_cylinder_ext_list, p_cylinder_int_list, p_beads_list, rotation_speed, p_list_position,p_list_radius);
-	fprintf(stderr, "Tout a bien ete cree\n");
 	
 	ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface(0);
 	ChVectorDynamic<std::shared_ptr<ChBody>> surface = ChVectorDynamic<std::shared_ptr<ChBody>>(0);
 	
 	p_surface = &surface;
-	detect_surface(p_beads_list,p_surface, r_bead, time);
+	detect_surface(p_beads_list,p_surface, r_bead, time);*/
 	
 	// create a .dat file with three columns of demo data:
 	std::string datafile = out_dir + "/velocity_profile.dat";
@@ -550,28 +511,14 @@ int main(int argc, char* argv[]) {
 	
 	velocity_profile << "0" << " " << "0" << " " << "id_frame" << " " << "id_part" << " " << "v_r" << " " << "v_t" << " " << "r" << "\n";
 	all_data_surface << "time" << " " << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
-	
-	// Create an exporter to POVray and set all associated filepaths and settings 
-	ChPovRay pov_exporter = ChPovRay(&mphysicalSystem);
-	if (SetPovrayPaths(&pov_exporter, out_dir) != 0) {
-		fprintf(stderr, "Error creating povray data paths\n");
-		return -1;
-	}
-	SetPovrayParameters(&pov_exporter, 0, 30, 0);*/
-
-
 
 	// THE SOFT-REAL-TIME CYCLE
 	double time = 0.0;
 	double out_time = 0.0;
+	int frame = 0;
 
-	/*double i = 0.0;
-	bool motor_launched = false;
-	bool in_mouvement = true;
-	int id_frame = 0;*/
-
+	// Iterate through simulation and calculate resultant motion for each timestep
 	while (time < time_sim) {
-		//printf("nb bille = %i \n", p_beads_list->size());
 		#ifdef CHRONO_IRRLICHT
 			if (application != NULL) {
 				application->BeginScene(true, true, SColor(255, 255, 255, 255));
@@ -591,28 +538,28 @@ int main(int argc, char* argv[]) {
 			}
 		#endif
 
+		//detect_surface(p_beads_list, p_surface, r_bead, time);
+		for (int j = start_plist; j < start_plist + num_particles; ++j) {
+			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(j);
 
-		/*detect_surface(p_beads_list, p_surface, r_bead, time);
-			
-		for (int j = 0; j < p_surface->GetLength(); j++) {
-			double v_x = p_surface->GetElementN(j)->GetPos_dt().x();
-			double v_y = p_surface->GetElementN(j)->GetPos_dt().y();
-			double v_z = p_surface->GetElementN(j)->GetPos_dt().z();
-			double x = p_surface->GetElementN(j)->GetPos().x();
-			double y = p_surface->GetElementN(j)->GetPos().y();
-			double z = p_surface->GetElementN(j)->GetPos().z();
+			int id = body->GetIdentifier();
+			double v_x = body->GetPos_dt().x();
+			double v_y = body->GetPos_dt().y();
+			double v_z = body->GetPos_dt().z();
+			double x = body->GetPos().x();
+			double y = body->GetPos().y();
+			double z = body->GetPos().z();
 			double theta = atan2(z, x);
 			double r = sqrt(x*x +z*z);
 			double v_r = v_x * cos(theta) + v_z * sin(theta);
 			double v_t = v_z * cos(theta) - v_x * sin(theta);
-			int id = p_surface->GetElementN(j)->GetIdentifier();
 			
-			velocity_profile << 0 << " " << 0 << " " << id_frame << " " << id << " " << v_r << " " << v_t << " " <<r << "\n";
+			velocity_profile << 0 << " " << 0 << " " << frame << " " << id << " " << v_r << " " << v_t << " " << r << "\n";
 			all_data_surface << time << " " << id << " " << x << " " << y << " " << z << " " << v_x << " " << v_y << " " << v_z << " " << "\n";
-		}*/
+		}
 
 		pov_exporter.ExportData();
-		//id_frame = id_frame + 1;
+		frame = frame + 1;
 		out_time = time - time_step + out_step;
 	}
 
