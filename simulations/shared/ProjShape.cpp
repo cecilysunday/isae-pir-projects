@@ -8,6 +8,7 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono/assets/ChTexture.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
