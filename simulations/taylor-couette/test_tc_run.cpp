@@ -293,60 +293,6 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int,
 }
 
 
-/*void detect_surface(std::vector< std::shared_ptr< ChBody > >* p_beads_list, ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface, double r_bead, double time) {
-	
-	p_surface->Reset();
-	p_surface->Resize(0);
-	int nb_bille_surf = 0;
-	ChVectorDynamic<std::shared_ptr<ChBody>> list_surf;
-	list_surf.Resize(p_beads_list->size());
-	std::shared_ptr<ChBody> test = (*p_beads_list)[0];
-	
-	for (int j = 0; j < p_beads_list->size(); j++) {
-		if ((*p_beads_list)[j]->GetPos().y() > test->GetPos().y()) {
-			test = (*p_beads_list)[j];
-		}
-	}
-
-	for (int j = 0; j < p_beads_list->size(); j++) {
-		if ((*p_beads_list)[j]->GetPos().y() > test->GetPos().y() - 2 * (r_bead + r_bead / 100)) {
-			list_surf.SetElementN(nb_bille_surf, (*p_beads_list)[j]);
-			nb_bille_surf = nb_bille_surf + 1;
-		}
-	}
-
-	GetLog() << "\nTime = " << time << "\tNum Total Beads = " << p_beads_list->size() << "\tNum Surface Beads = " << nb_bille_surf;
-	
-	p_surface->Resize(nb_bille_surf);
-	for (int i = 0; i < nb_bille_surf; i++) {
-		p_surface->SetElementN(i, list_surf.GetElementN(i));
-	}
-	
-}
-
-
-double mean_vector(ChVectorDynamic<double>* p_vector) {
-	double s = 0;
-	for (int i = 0; i < p_vector->GetLength(); i++) {
-		s = s + p_vector->GetElementN(i);
-	}
-	return s / p_vector->GetLength();
-}
-
-
-bool is_in_mouvement(std::vector< std::shared_ptr< ChBody > >* p_beads_list) {//renvoie true si les billes sont en mouvement
-	ChVectorDynamic<double> tab_v = ChVectorDynamic<double>(p_beads_list->size());
-	for (int i = 0; i < p_beads_list->size(); ++i) {
-		double v=sqrt((*p_beads_list)[i]->GetPos_dt().x()*(*p_beads_list)[i]->GetPos_dt().x() + (*p_beads_list)[i]->GetPos_dt().z()*(*p_beads_list)[i]->GetPos_dt().z());
-		tab_v.SetElementN(i, v<0.5);
-		
-	}
-	double mean_v = mean_vector(&tab_v);
-	fprintf(stderr, "mean_v : %f\n", mean_v);
-	return (!(mean_v-1.0<0.0001 && mean_v-1.0>-0.0001) );
-}*/
-
-
 //Read the position in a given file, and stock it into the list pointed by p_list_pos
 void read_pos(std::vector<ChVector<>>* p_list_pos, std::vector<double>* p_radius, const std::string set_path) {
 	int i = 0;
@@ -395,11 +341,12 @@ void SetSimParameters(ChSystemParallelSMC* msystem, ChVector<> gravity, double r
 	msystem->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
 	msystem->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 
-	msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-	msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R; /// Types: NARROWPHASE_HYBRID_MPR, NARROWPHASE_R, NARROWPHASE_MPR
-
+	// Set collision detection properties
 	msystem->ChangeCollisionSystem(CollisionSystemType::COLLSYS_PARALLEL); /// Types:: COLLSYS_PARALLEL, COLLSYS_BULLET_PARALLEL
 	msystem->SetTimestepperType(ChTimestepper::Type::LEAPFROG); /// Types: LEAPFROG....
+	msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+	msystem->GetSettings()->collision.use_aabb_active = true;
+	msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R; /// Types: NARROWPHASE_HYBRID_MPR, NARROWPHASE_R, NARROWPHASE_MPR
 
 	// Change the default collision effective radius of curvature 
 	ChCollisionInfo::SetDefaultEffectiveCurvatureRadius(r_bead / 2);
@@ -472,13 +419,6 @@ int main(int argc, char* argv[]) {
 
 	PrintSimParameters(&msystem);
 
-	// Create a 2D array of ParticleData structs to store state information throughout the simulation
-	/*ParticleData **cstate_data = new ParticleData*[num_particles];
-	for (size_t i = 0; i < num_particles; ++i) {
-		cstate_data[i] = new ParticleData[BUFFER_SIZE];
-		memset(cstate_data[i], 0, BUFFER_SIZE * sizeof(ParticleData));
-	}*/
-
 	// Create an exporter to POVray and set all associated filepaths and settings
 	ChPovRay pov_exporter = ChPovRay(&msystem);
 	if (SetPovrayPaths(&pov_exporter, out_dir) != 0) {
@@ -492,16 +432,6 @@ int main(int argc, char* argv[]) {
 		bool vis = false;
 		auto application = SetSimVis(&msystem, time_step, vis, 20.0);
 	#endif
-
-	/*std::vector< std::shared_ptr< ChBody > > beads_list;
-	std::vector< std::shared_ptr< ChBody > >* p_beads_list(0);
-	p_beads_list = &beads_list;
-	
-	ChVectorDynamic<std::shared_ptr<ChBody>>* p_surface(0);
-	ChVectorDynamic<std::shared_ptr<ChBody>> surface = ChVectorDynamic<std::shared_ptr<ChBody>>(0);
-	
-	p_surface = &surface;
-	detect_surface(p_beads_list,p_surface, r_bead, time);*/
 	
 	// create a .dat file with three columns of demo data:
 	std::string datafile = out_dir + "/velocity_profile.dat";
@@ -518,6 +448,11 @@ int main(int argc, char* argv[]) {
 	double out_time = 0.0;
 	int frame = 0;
 
+	double timer_sim = 0.0;
+	double timer_bcollision = 0.0;
+	double timer_ncollision = 0.0;
+	double timer_fcalc = 0.0;
+
 	// Iterate through simulation and calculate resultant motion for each timestep
 	while (time < time_sim) {
 		#ifdef CHRONO_IRRLICHT
@@ -531,6 +466,11 @@ int main(int argc, char* argv[]) {
 		while (time == 0 || time < out_time) {
 			msystem.DoStepDynamics(time_step);
 			time += time_step;
+
+			timer_sim += msystem.GetTimerStep();
+			timer_bcollision += msystem.GetTimerCollisionBroad();
+			timer_ncollision += msystem.GetTimerCollisionNarrow();
+			timer_fcalc += msystem.GetTimerProcessContact();
 		}
 
 		#ifdef CHRONO_IRRLICHT
@@ -538,8 +478,6 @@ int main(int argc, char* argv[]) {
 				application->EndScene();
 			}
 		#endif
-
-		//detect_surface(p_beads_list, p_surface, r_bead, time);
 		
 		for (int j = start_plist; j < start_plist + num_particles; ++j) {
 			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(j);
@@ -569,6 +507,12 @@ int main(int argc, char* argv[]) {
 	#ifdef CHRONO_IRRLICHT
 		delete application;
 	#endif
+
+	// Print simulation timers to log
+	chrono::GetLog() << "\n" << "SYS, timer_bcollision, " << timer_bcollision
+					 << "\n" << "SYS, timer_ncollision, " << timer_ncollision
+					 << "\n" << "SYS, timer_fcalc, " << timer_fcalc
+					 << "\n" << "SYS, timer_sim, " << timer_sim;
 
 	return 0;
 }
