@@ -422,8 +422,8 @@ int main(int argc, char* argv[]) {
 	//Import geometic parameters from tc_set simulation
 	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
 
-	//std::string path = out_dir + "/../20190621_160112_tc_set";
-	std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
+	std::string path = out_dir + "/../20190621_160112_tc_set";
+	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 
 	fichier >> gy >> r_bead >> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
