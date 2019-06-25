@@ -34,9 +34,9 @@ std::shared_ptr<ChBody> AddCylinder(int id, ChSystemParallelSMC* msystem, std::s
 	double radius, double height, double mass, ChVector<> pos, bool fixed);
 
 // Function to apply a .JPEG pattern to a body from the Chrono data directory
-#ifdef CHRONO_IRRLICHT
+//#ifdef CHRONO_IRRLICHT
 void AddPattern(std::shared_ptr<ChBody> body, std::string pattern);
-#endif 
+//#endif 
 
 //Function to link a motor between two bodies
 void AddMotor(ChSystemParallelSMC* msystem, std::shared_ptr<ChBody> rotor, std::shared_ptr<ChBody> stator, ChVector<> pos, double speed);

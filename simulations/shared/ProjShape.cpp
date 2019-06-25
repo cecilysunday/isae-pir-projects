@@ -170,7 +170,7 @@ std::shared_ptr<ChBody> AddCylinder(int id, ChSystemParallelSMC* msystem, std::s
 }
 
 
-#ifdef CHRONO_IRRLICHT
+//#ifdef CHRONO_IRRLICHT
 void AddPattern(std::shared_ptr<ChBody> body, std::string pattern) {
 	
 	auto mtexture = std::make_shared<ChTexture>();
@@ -178,7 +178,7 @@ void AddPattern(std::shared_ptr<ChBody> body, std::string pattern) {
 	
 	body->AddAsset(mtexture);
 }
-#endif
+//#endif
 
 
 void AddMotor(ChSystemParallelSMC* msystem, std::shared_ptr<ChBody> rotor, std::shared_ptr<ChBody> stator, ChVector<> pos, double rot_vel) {
