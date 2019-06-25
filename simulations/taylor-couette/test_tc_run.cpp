@@ -17,6 +17,7 @@
 // =============================================================================
 
 #include "chrono/ChConfig.h"
+#include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
@@ -25,8 +26,8 @@
 #include "chrono_postprocess/ChPovRayAssetCustom.h"
 
 #include "ProjDataPath.h"
-#include "ProjLog.h"
 #include "ProjShape.h"
+#include "ProjLog.h"
 #include "ProjWriteData.h"
 
 #include <ctime>        
