@@ -161,7 +161,7 @@ std::shared_ptr<ChBody> AddCylinder(int id, ChSystemParallelSMC* msystem, std::s
 	body->SetCollide(true);
 	
 	body->GetCollisionModel()->ClearModel();
-	utils::AddCylinderGeometry(body.get(), radius, height, ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0));
+	utils::AddCylinderGeometry(body.get(), radius, height/2, ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0));
 	body->GetCollisionModel()->BuildModel();
 
 	// Return a pointer to the cylinder object so that it can be accessed in main 

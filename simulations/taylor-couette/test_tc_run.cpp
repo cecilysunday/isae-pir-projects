@@ -238,8 +238,8 @@ void create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double 
 				}
 			}
 		}
-	}
-
+	} 
+	
 	else fprintf(stderr, "La methode rentree est incorrecte\n");
 }
 
@@ -260,13 +260,13 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int,
 	wmat->SetAdhesion(0);
 
 	//Création du sol
-	ChVector<> fb_size = ChVector<>(r_cyl_ext, 0.5, r_cyl_ext); //or should it be (r_cyl_ext, 1.0, r_cyl_ext)?
-	ChVector<> fb_pos = ChVector<>(ChVector<>(0, -height - fb_size.y(), 0));
+	ChVector<> fb_size = ChVector<>(r_cyl_ext, 0.1, r_cyl_ext); //or should it be (r_cyl_ext, 1.0, r_cyl_ext)?
+	ChVector<> fb_pos = ChVector<>(ChVector<>(0, - fb_size.y(), 0));
 		
-	auto fixedBody = AddPovRayWall(--id, msystem, wmat, fb_size, 1.0, fb_pos, rot, true);
+	auto fixedBody = AddPovRayWall(--id, msystem, wmat, fb_size, 10.0, fb_pos, rot, true);
 	
 	// Add the rotating cylinder
-	ChVector<> rb_pos = ChVector<>(ChVector<>(0, 0, 0));
+	ChVector<> rb_pos = ChVector<>(ChVector<>(0, height/2, 0));
 	
 	auto rotatingBody = AddCylinder(--id, msystem, wmat, r_cyl_int, height, 10.0, rb_pos, false);
 	AddPattern(rotatingBody, "bluwhite.png");
@@ -407,7 +407,7 @@ void SetSimParameters(ChSystemParallelSMC* msystem, ChVector<> gravity, double r
 
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
-	bool dontcare = true;
+	bool dontcare = false;
 	std::string projname = "_tc_run"; 
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
@@ -422,7 +422,7 @@ int main(int argc, char* argv[]) {
 	//Import geometic parameters from tc_set simulation
 	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
 
-	//std::string path = out_dir + "/../20190621_160112_tc_set"; // out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
+	//std::string path = out_dir + "/../20190621_160112_tc_set";
 	std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 
@@ -462,12 +462,12 @@ int main(int argc, char* argv[]) {
 
 	// Print simulation parameters to log file
 	GetLog() << "\n" << "SYS, time_step, " << time_step
-			 << "\n" << "SYS, out_step, " << out_step
-			 << "\n" << "SYS, total_sim_time, " << time_sim
-			 << "\n" << "SYS, num_walls, " << (double)num_walls
-	 	     << "\n" << "SYS, num_particles, " << (double)num_particles
-			 << "\n" << "SYS, buffer_size, " << BUFFER_SIZE
-			 << "\n" << "SYS, data_array_size, " << num_particles * BUFFER_SIZE * sizeof(ParticleData);
+		<< "\n" << "SYS, out_step, " << out_step
+		<< "\n" << "SYS, total_sim_time, " << time_sim
+		<< "\n" << "SYS, num_walls, " << (double)num_walls
+		<< "\n" << "SYS, num_particles, " << (double)num_particles
+		<< "\n" << "SYS, buffer_size, " << BUFFER_SIZE
+		<< "\n" << "SYS, data_array_size, " << num_particles * BUFFER_SIZE * sizeof(ParticleData);
 
 	PrintSimParameters(&msystem);
 
@@ -488,7 +488,7 @@ int main(int argc, char* argv[]) {
 
 	// Create the Irrlicht visualization. Set vis to false to turn off visualization. 
 	#ifdef CHRONO_IRRLICHT
-		bool vis = true;
+		bool vis = false;
 		auto application = SetSimVis(&msystem, time_step, vis, 20.0);
 	#endif
 
@@ -539,6 +539,7 @@ int main(int argc, char* argv[]) {
 		#endif
 
 		//detect_surface(p_beads_list, p_surface, r_bead, time);
+		
 		for (int j = start_plist; j < start_plist + num_particles; ++j) {
 			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(j);
 
