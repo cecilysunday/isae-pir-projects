@@ -183,7 +183,7 @@ void AddPattern(std::shared_ptr<ChBody> body, std::string pattern) {
 void AddMotor(ChSystemParallelSMC* msystem, std::shared_ptr<ChBody> rotor, std::shared_ptr<ChBody> stator, ChVector<> pos, double rot_vel) {
 
 	auto motor = std::make_shared<ChLinkMotorRotationSpeed>();
-	motor->Initialize(rotor, stator, ChFrame<>(pos));
+	motor->Initialize(rotor, stator, ChFrame<>(pos, Q_from_AngAxis(CH_C_PI_2, VECT_X)));
 	msystem->Add(motor);
 
 	auto mwspeed = std::make_shared<ChFunction_Const>(rot_vel);

@@ -59,7 +59,7 @@ using namespace chrono::postprocess;
 			application->AddTypicalLogo();
 			application->AddTypicalSky();
 			application->AddTypicalLights();
-			application->AddTypicalCamera(core::vector3df(0, y, 0));
+			application->AddTypicalCamera(core::vector3df(0, 0, y));
 
 			// Complete asset construction: convert all assets to Irrlicht
 			application->SetStepManage(true);
@@ -182,66 +182,60 @@ void create_cylinder_ext(ChSystemParallelSMC* msystem, double r_cyl_ext, double 
 }
 
 
-void create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double height, double r_bead, double mass, int methode, std::shared_ptr<chrono::ChBodyFrame> rotatingBody) {
-	//Remplissage en colonne
-	if (methode == 1) {
-		for (int i = 0; i < floor((CH_C_PI * (r_cyl_int + r_bead)) / r_bead) + 1; i++) {
-			for (int j = 0; j < floor(height / (2 * r_bead)); j++) {
-				ChVector<> pos = ChVector<>((r_cyl_int + r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_int + r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_int + r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_int + r_bead)))));
-				create_bead(msystem, true, false, r_bead, mass, pos);
-				
-				auto lock = std::make_shared<ChLinkMateFix>();
-				lock->Initialize(msystem->Get_bodylist().back(), rotatingBody);
-				msystem->AddLink(lock);
+std::shared_ptr<ChBody> create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double height, double r_bead, double mass) {
+	// Create a shared material for the particles
+	auto pmat = std::make_shared<ChMaterialSurfaceSMC>();
+
+	pmat->SetSfriction(0.4f);
+	pmat->SetKfriction(0.4f);
+	pmat->SetRollingFriction(0.0f);
+	pmat->SetSpinningFriction(0.0f);
+	pmat->SetRestitution(0.6f);
+	pmat->SetAdhesion(0.0f);
+	pmat->SetAdhesionMultDMT(0.0f);
+	pmat->SetAdhesionSPerko(0.0f);
+
+	// Define the shared wall properties
+	int id = msystem->Get_bodylist().at(msystem->Get_bodylist().size() - 1)->GetIdentifier() - 1;
+	ChQuaternion<> rot = ChQuaternion<>(1, 0, 0, 0);
+	ChVector<> posc = ChVector<>(0, height / 2, 0);
+	ChVector<> poso = ChVector<>(0, r_bead / 6, 0);
+
+	// Create the wall from a group of particles
+	auto cylinder = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+	cylinder->SetIdentifier(id);
+	cylinder->SetMass(mass); // FIX ME
+	cylinder->SetPos(posc);
+	cylinder->SetRot(rot);
+	cylinder->SetMaterialSurface(pmat); // FIX ME
+	cylinder->SetBodyFixed(false);
+	cylinder->SetCollide(true);
+
+	cylinder->GetCollisionModel()->ClearModel();
+	utils::AddCylinderGeometry(cylinder.get(), r_cyl_int, height / 2, ChVector<>(0, 0, 0), rot, true);
+	for (int j = 0; j < floor((height - r_bead) / (sqrt(3) * r_bead)); j = j + 2) {
+		for (int i = 0; i < floor( CH_C_PI * (r_cyl_int + r_bead) / r_bead) + 1; i++) {
+			ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * j+r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
+			utils::AddSphereGeometry(cylinder.get(), r_bead, pos - posc + poso, rot, false);
+
+			if (j + 1 < floor((height - r_bead) / (sqrt(3) * r_bead))) {
+				ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead) * cos((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_int + r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))));
+				utils::AddSphereGeometry(cylinder.get(), r_bead, pos2 - posc + poso, rot, false);
 			}
 		}
 	}
-	
-	//Remplissage en décalé sans contact vertical
-	else if (methode == 2) { 
-		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
-			for (int i = 0; i < floor((CH_C_PI * (r_cyl_int + r_bead)) / r_bead) + 1; i++) {
-				ChVector<> pos = ChVector<>((r_cyl_int + r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_int + r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_int + r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_int + r_bead)))));
-				create_bead(msystem, true, false, r_bead, mass, pos);
+	cylinder->GetCollisionModel()->BuildModel();
 
-				auto lock = std::make_shared<ChLinkMateFix>();
-				lock->Initialize(msystem->Get_bodylist().back(), rotatingBody);
-				msystem->AddLink(lock);
+	// Add a color to the interior wall
+	auto mvisual = std::make_shared<ChColorAsset>();
+	mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));
+	cylinder->AddAsset(mvisual);
 
-				ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead)*cos((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))), r_bead * 2 * (j + 1) + r_bead, (r_cyl_int + r_bead)*sin((2 * i + 1)*(atan(r_bead / (r_cyl_int + r_bead)))));
-				create_bead(msystem, true, false, r_bead, mass, pos2);
+	// AddPattern(cylinder, "bluwhite.png");
 
-				auto lock2 = std::make_shared<ChLinkMateFix>();
-				lock2->Initialize(msystem->Get_bodylist().back(), rotatingBody);
-				msystem->AddLink(lock2);
-			}
-		}
-	}
-
-	//Remplissage en décalé avec contact vertical
-	else if (methode == 3) { 
-		for (int j = 0; j < floor((height - r_bead) / (sqrt(3) * r_bead)); j = j + 2) {
-			for (int i = 0; i < floor( CH_C_PI * (r_cyl_int + r_bead) / r_bead) + 1; i++) {
-				ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * j+r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
-				create_bead(msystem, true, false, r_bead, mass, pos);
-
-				auto lock = std::make_shared<ChLinkMateFix>();
-				lock->Initialize(msystem->Get_bodylist().back(), rotatingBody);
-				msystem->AddLink(lock);
-
-				if (j + 1 < floor((height - r_bead) / (sqrt(3) * r_bead))) {
-					ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead) * cos((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_int + r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))));
-					create_bead(msystem, true, false, r_bead, mass, pos2);
-
-					auto lock2 = std::make_shared<ChLinkMateFix>();
-					lock2->Initialize(msystem->Get_bodylist().back(), rotatingBody);
-					msystem->AddLink(lock2);
-				}
-			}
-		}
-	} 
-	
-	else fprintf(stderr, "La methode rentree est incorrecte\n");
+	// Add the interior wall to the system and return
+	msystem->AddBody(cylinder);
+	return cylinder;
 }
 
 
@@ -266,23 +260,18 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int,
 		
 	auto fixedBody = AddPovRayWall(--id, msystem, wmat, fb_size, 10.0, fb_pos, rot, true);
 	
-	// Add the rotating cylinder
-	ChVector<> rb_pos = ChVector<>(ChVector<>(0, height/2, 0));
-	
-	auto rotatingBody = AddCylinder(--id, msystem, wmat, r_cyl_int, height, 10.0, rb_pos, false);
-	AddPattern(rotatingBody, "bluwhite.png");
+	// Add a rotating inner cylinder covered with beads
+	auto rotatingBody = create_cylinder_int(msystem, r_cyl_int, height, r_bead, mass);
 
-	// Add a motor between the rotating and fixed bodies
 	auto motor = std::make_shared<ChLinkMotorRotationSpeed>();
 	motor->Initialize(rotatingBody, fixedBody, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngAxis(CH_C_PI_2, VECT_X)));
-	
+	msystem->Add(motor);
+
 	auto mfun = std::make_shared<ChFunction_Const>(rotation_speed);  // speed w=90°/s CH_C_PI / 2.0
 	motor->SetSpeedFunction(mfun);
 	motor->SetAvoidAngleDrift(0);
-	msystem->AddLink(motor);
 
-	// Add particles linning the inner cylyinder wall
-	create_cylinder_int(msystem, r_cyl_int, height, r_bead, mass, 3, rotatingBody);
+	// Add the particles forming the outer cylyinder wall
 	create_cylinder_ext(msystem, r_cyl_ext, height, r_bead, mass, 3);
 
 	// Find and return index range of wall list 
@@ -329,10 +318,8 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 
 // Set simulation settings and collision detection parameters
 void SetSimParameters(ChSystemParallelSMC* msystem, ChVector<> gravity, double r_bead) {
+	// Set CalcContactForce properties
 	msystem->Set_G_acc(gravity);
-
-	msystem->GetSettings()->solver.max_iteration_bilateral = 100;
-	msystem->GetSettings()->solver.tolerance = 1e-3;
 
 	msystem->GetSettings()->solver.min_roll_vel = 1E-5;
 	msystem->GetSettings()->solver.min_spin_vel = 1E-5;
@@ -341,11 +328,13 @@ void SetSimParameters(ChSystemParallelSMC* msystem, ChVector<> gravity, double r
 	msystem->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
 	msystem->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 
-	// Set collision detection properties
+	// Set collision detection and solver properties
 	msystem->ChangeCollisionSystem(CollisionSystemType::COLLSYS_PARALLEL); /// Types:: COLLSYS_PARALLEL, COLLSYS_BULLET_PARALLEL
 	msystem->SetTimestepperType(ChTimestepper::Type::LEAPFROG); /// Types: LEAPFROG....
+	
+	msystem->GetSettings()->solver.max_iteration_bilateral = 100;
+	msystem->GetSettings()->solver.tolerance = 1e-3;
 	msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-	msystem->GetSettings()->collision.use_aabb_active = true;
 	msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R; /// Types: NARROWPHASE_HYBRID_MPR, NARROWPHASE_R, NARROWPHASE_MPR
 
 	// Change the default collision effective radius of curvature 
@@ -370,7 +359,7 @@ int main(int argc, char* argv[]) {
 	//Import geometic parameters from tc_set simulation
 	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
 
-	std::string path = out_dir + "/../20190621_160112_tc_set";
+	std::string path = out_dir + "/../20190625_145123_tc_set";
 	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 
@@ -410,12 +399,12 @@ int main(int argc, char* argv[]) {
 
 	// Print simulation parameters to log file
 	GetLog() << "\n" << "SYS, time_step, " << time_step
-		<< "\n" << "SYS, out_step, " << out_step
-		<< "\n" << "SYS, total_sim_time, " << time_sim
-		<< "\n" << "SYS, num_walls, " << (double)num_walls
-		<< "\n" << "SYS, num_particles, " << (double)num_particles
-		<< "\n" << "SYS, buffer_size, " << BUFFER_SIZE
-		<< "\n" << "SYS, data_array_size, " << num_particles * BUFFER_SIZE * sizeof(ParticleData);
+			 << "\n" << "SYS, out_step, " << out_step
+			 << "\n" << "SYS, total_sim_time, " << time_sim
+			 << "\n" << "SYS, num_walls, " << (double)num_walls
+			 << "\n" << "SYS, num_particles, " << (double)num_particles
+			 << "\n" << "SYS, buffer_size, " << BUFFER_SIZE
+			 << "\n" << "SYS, data_array_size, " << num_particles * BUFFER_SIZE * sizeof(ParticleData);
 
 	PrintSimParameters(&msystem);
 
