@@ -108,9 +108,9 @@ std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<
 	std::pair<size_t, size_t> prange;
 	prange.first = msystem->Get_bodylist().size();
 
-	for (int k = 0; k < floor(((r_cyl_ext - 2 * r_bead) - (r_cyl_int + 2 * r_bead)) / (2 * r_bead)); k++) {
-		for (int j = 0; j < floor(height_bead / (2 * r_bead)); j = j++) {
-			for (int i = 0; i < floor((CH_C_PI * (r_cyl_int + 3 * r_bead + 2 * k * r_bead)) / r_bead); i++) {
+	for (int k = 0; k < floor(((r_cyl_ext - 2 * r_bead) - (r_cyl_int + 2 * r_bead)) / (2 * r_bead)); ++k) {
+		for (int j = 0; j < floor(height_bead / (2 * r_bead)); ++j) {
+			for (int i = 0; i < floor(+(CH_C_PI * (r_cyl_int + 3 * r_bead + 2 * k * r_bead)) / r_bead); ++i) {
 
 				unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 				std::default_random_engine generator(seed);

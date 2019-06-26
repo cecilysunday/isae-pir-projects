@@ -340,7 +340,7 @@ int main(int argc, char* argv[]) {
 	auto pmat = AddMaterialProperties(y_modulus, p_ratio, s_frict, k_frict, roll_frict, spin_frict, cor, ad);
 
 	// Import parameters from tc_set simulation
-	std::string path = out_dir + "/../20190626_085800_tc_set";
+	std::string path = out_dir + "/../20190626_093930_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 	
 	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
