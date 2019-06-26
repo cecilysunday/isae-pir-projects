@@ -59,7 +59,7 @@ using namespace chrono::postprocess;
 			application->AddTypicalLogo();
 			application->AddTypicalSky();
 			application->AddTypicalLights();
-			application->AddTypicalCamera(core::vector3df(0, 0, y));
+			application->AddTypicalCamera(core::vector3df(0, y/2, y));
 
 			// Complete asset construction: convert all assets to Irrlicht
 			application->SetStepManage(true);
@@ -139,46 +139,17 @@ std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, double mass, std
 
 
 void create_cylinder_ext(ChSystemParallelSMC* msystem, double r_cyl_ext, double height, double r_bead, double mass, int methode) {
-	//Columns arrangement
-	if (methode == 1) { 
-
-		for (int i = 0; i < floor(CH_C_PI * (r_cyl_ext - r_bead) / r_bead) + 1; i++) {
-			for (int j = 0; j < floor(height / (2 * r_bead)); j = j++) {
-				ChVector <> pos = ChVector<>((r_cyl_ext - r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_ext - r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(msystem, true, true, r_bead, mass, pos);
-			}
-		}
-	}
-	
-	//More compact arrangement (horizontal shift from a line to an other)
-	else if (methode == 2) { 
-		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
-			for (int i = 0; i < floor((CH_C_PI*(r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
-				ChVector<> pos = ChVector<>((r_cyl_ext - r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_ext - r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(msystem, true, true, r_bead, mass, pos);
-
-				ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead) * cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), r_bead * 2 * (j + 1) + r_bead, (r_cyl_ext - r_bead)*sin((2 * i + 1) * (atan(r_bead / (r_cyl_ext - r_bead)))));
+	for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
+		for (int i = 0; i < floor((CH_C_PI * (r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
+			ChVector<> pos = ChVector<>((r_cyl_ext - r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * j + r_bead, (r_cyl_ext - r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))));
+			create_bead(msystem, true, true, r_bead, mass, pos);
+				
+			if (j + 1 < floor(height / (2 * r_bead))) {
+				ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead) * cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_ext - r_bead)))));
 				create_bead(msystem, true, true, r_bead, mass, pos2);
 			}
 		}
 	}
-
-	//Compact arrangement
-	else if (methode == 3) {
-		for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
-			for (int i = 0; i < floor((CH_C_PI * (r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
-				ChVector<> pos = ChVector<>((r_cyl_ext - r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * j + r_bead, (r_cyl_ext - r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(msystem, true, true, r_bead, mass, pos);
-				
-				if (j + 1 < floor(height / (2 * r_bead))) {
-					ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead) * cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_ext - r_bead)))));
-					create_bead(msystem, true, true, r_bead, mass, pos2);
-				}
-			}
-		}
-	}
-
-	else fprintf(stderr, "La methode rentree est incorrecte\n");
 }
 
 
@@ -213,12 +184,12 @@ std::shared_ptr<ChBody> create_cylinder_int(ChSystemParallelSMC* msystem, double
 
 	cylinder->GetCollisionModel()->ClearModel();
 	utils::AddCylinderGeometry(cylinder.get(), r_cyl_int, height / 2, ChVector<>(0, 0, 0), rot, true);
-	for (int j = 0; j < floor((height - r_bead) / (sqrt(3) * r_bead)); j = j + 2) {
+	for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
 		for (int i = 0; i < floor( CH_C_PI * (r_cyl_int + r_bead) / r_bead) + 1; i++) {
 			ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * j+r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
 			utils::AddSphereGeometry(cylinder.get(), r_bead, pos - posc + poso, rot, false);
 
-			if (j + 1 < floor((height - r_bead) / (sqrt(3) * r_bead))) {
+			if (j + 1 < floor(height / (2 * r_bead))) {
 				ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead) * cos((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_int + r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))));
 				utils::AddSphereGeometry(cylinder.get(), r_bead, pos2 - posc + poso, rot, false);
 			}
@@ -255,7 +226,7 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int,
 	wmat->SetAdhesion(0);
 
 	//Création du sol
-	ChVector<> fb_size = ChVector<>(r_cyl_ext, 0.1, r_cyl_ext); //or should it be (r_cyl_ext, 1.0, r_cyl_ext)?
+	ChVector<> fb_size = ChVector<>(r_cyl_ext, 0.1, r_cyl_ext);
 	ChVector<> fb_pos = ChVector<>(ChVector<>(0, - fb_size.y(), 0));
 		
 	auto fixedBody = AddPovRayWall(--id, msystem, wmat, fb_size, 10.0, fb_pos, rot, true);
@@ -359,7 +330,7 @@ int main(int argc, char* argv[]) {
 	//Import geometic parameters from tc_set simulation
 	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
 
-	std::string path = out_dir + "/../20190625_145123_tc_set";
+	std::string path = out_dir + "/../20190625_221742_tc_set";
 	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
 
