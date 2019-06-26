@@ -327,13 +327,23 @@ int main(int argc, char* argv[]) {
 	
 	GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
-	//Import geometic parameters from tc_set simulation
-	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
+	// Create a shared material for the particles
+	float y_modulus = 2.0e5;
+	float p_ratio = 0.3f;
+	float s_frict = 0.4f;
+	float k_frict = 0.4f;
+	float roll_frict = 0.0f;
+	float spin_frict = 0.0f;
+	float cor = 0.6f;
+	float ad = 0.0f;
 
-	std::string path = out_dir + "/../20190625_221742_tc_set";
-	//std::string path = out_dir + "/../TEMP_calmip/test_0/TEMP_tc_set";
+	auto pmat = AddMaterialProperties(y_modulus, p_ratio, s_frict, k_frict, roll_frict, spin_frict, cor, ad);
+
+	// Import parameters from tc_set simulation
+	std::string path = out_dir + "/../20190626_085800_tc_set";
 	std::ifstream fichier(path + "/settings.dat");
-
+	
+	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
 	fichier >> gy >> r_bead >> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 
 	// Create a parallel SMC system and set the system parameters
@@ -473,6 +483,30 @@ int main(int argc, char* argv[]) {
 					 << "\n" << "SYS, timer_ncollision, " << timer_ncollision
 					 << "\n" << "SYS, timer_fcalc, " << timer_fcalc
 					 << "\n" << "SYS, timer_sim, " << timer_sim;
+
+	// Save the final particle state data
+	std::string datafile3 = out_dir + "/position.dat";
+	std::ofstream position(datafile3, std::ios::out | std::ios::trunc);
+
+	if (position) {
+		for (int i = start_plist; i < start_plist + num_particles; ++i) {
+			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(i);
+			position << body->GetIdentifier() << " "
+					 << body->GetCollisionModel()->GetEnvelope() << " "
+					 << body->GetPos().x() << " "
+					 << body->GetPos().y() << " " 
+					 << body->GetPos().z() << " "
+					 << body->GetPos_dt().x() << " "
+					 << body->GetPos_dt().y() << " "
+					 << body->GetPos_dt().z() << " "
+					 << body->GetWvel_loc().x() << " "
+					 << body->GetWvel_loc().y() << " "
+					 << body->GetWvel_loc().z() << "\n";
+		}
+
+		position << -100000000 << " " << -100000000 << " " << -100000000 << -100000000 << "\n";
+		position.close();
+	}
 
 	return 0;
 }

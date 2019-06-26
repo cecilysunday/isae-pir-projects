@@ -51,7 +51,6 @@ using namespace chrono::irrlicht;
 using namespace irr;
 using namespace irr::video;
 
-// Function to handle irrlicht visualization parameters
 ChIrrApp* SetSimVis(ChSystemParallelSMC* msystem, double time_step, bool vis, double y) {
 	if (vis) {
 		ChIrrApp* application = new ChIrrApp(msystem, L"Shear Cell Experiment", core::dimension2d<u32>(800, 600));
@@ -77,8 +76,8 @@ ChIrrApp* SetSimVis(ChSystemParallelSMC* msystem, double time_step, bool vis, do
 #endif
 
 
-void create_bead(ChSystemParallelSMC* msystem, bool isWall, bool isFixed, double rad, double mass, ChVector<> pos, ChVector<> init_v) {
-	// Get start index of wall list
+void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, bool isWall, bool isFixed, double rad, double mass, ChVector<> pos, ChVector<> init_v) {
+	// Get start index and identifier of wall list
 	std::pair<size_t, size_t> prange;
 	prange.first = msystem->Get_bodylist().size();
 
@@ -87,23 +86,11 @@ void create_bead(ChSystemParallelSMC* msystem, bool isWall, bool isFixed, double
 	else if (!isWall && id < 0) id = 0;
 	else ++id;
 
-	// Create a shared material for the particles
-	auto pmat = std::make_shared<ChMaterialSurfaceSMC>();
-
-	pmat->SetSfriction(0.4f);
-	pmat->SetKfriction(0.4f);
-	pmat->SetRollingFriction(0.0f);
-	pmat->SetSpinningFriction(0.0f);
-	pmat->SetRestitution(0.6f);
-	pmat->SetAdhesion(0.0f);
-	pmat->SetAdhesionMultDMT(0.0f);
-	pmat->SetAdhesionSPerko(0.0f);
-
 	// Create particle
-	auto ball = AddMovingSphere(id, msystem, pmat, rad, mass, pos, init_v, ChVector<>(0, 0, 0));
+	auto ball = AddMovingSphere(id, msystem, mat, rad, mass, pos, init_v, ChVector<>(0, 0, 0));
 	if (isFixed == true) ball->SetBodyFixed(true);
 
-	// Create the visualization asset for the particle
+	// Add a visualization asset to the particle
 	if (isWall == true) {
 		auto mvisual = std::make_shared<ChColorAsset>();
 		mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));
@@ -111,14 +98,12 @@ void create_bead(ChSystemParallelSMC* msystem, bool isWall, bool isFixed, double
 	}
 	else AddPattern(ball, "bluwhite.png");
 
-	GetLog() << "\n" << (int)id << "\t" << msystem->Get_bodylist().at(prange.first - 1)->GetId();
-
 	// Get the end index of the particle list and return
 	prange.second = msystem->Get_bodylist().size() - 1;
 }
 
 
-std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, double r_cyl_int, double r_cyl_ext, double height_bead, double r_bead, double mass) {
+std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_int, double r_cyl_ext, double height_bead, double r_bead, double mass) {
 	// Get start index of particle list
 	std::pair<size_t, size_t> prange;
 	prange.first = msystem->Get_bodylist().size();
@@ -137,9 +122,9 @@ std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, double r_cyl_int
 				double vz = -1 + ChRandom() * 1;
 				ChVector<> vel = ChVector<>(vx, vy, vz);
 
-				ChVector <> pos = ChVector<>((r_cyl_int + 3 * r_bead + 2 * k*r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_int + 3 * r_bead + 2 * k*r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k*r_bead)))));
+				ChVector <> pos = ChVector<>((r_cyl_int + 3 * r_bead + 2 * k * r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k * r_bead)))), r_bead * 2 * j + r_bead, (r_cyl_int + 3 * r_bead + 2 * k * r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + 3 * r_bead + 2 * k * r_bead)))));
 
-				create_bead(msystem, false, false, radius, mass, pos, vel);
+				create_bead(msystem, mat, false, false, radius, mass, pos, vel);
 			}
 		}
 	}
@@ -152,33 +137,22 @@ std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, double r_cyl_int
 }
 
 
-void create_cylinder_ext(ChSystemParallelSMC* msystem, double r_cyl_ext, double height, double r_bead, double mass) {
+void create_cylinder_ext(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_ext, double height, double r_bead, double mass) {
 	for (int j = 0; j < floor(height / (sqrt(3) * r_bead)); j = j + 2) {
 		for (int i = 0; i < floor((CH_C_PI * (r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
 			ChVector<> pos = ChVector<>((r_cyl_ext - r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * j + r_bead, (r_cyl_ext - r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))));
-			create_bead(msystem, true, true, r_bead, mass, pos, ChVector<>(0, 0, 0));
+			create_bead(msystem, mat, true, true, r_bead, mass, pos, ChVector<>(0, 0, 0));
 
 			if (j + 1 < floor(height / (sqrt(3) * r_bead))) {
 				ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead) * cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_ext - r_bead)))));
-				create_bead(msystem, true, true, r_bead, mass, pos2, ChVector<>(0, 0, 0));
+				create_bead(msystem, mat,  true, true, r_bead, mass, pos2, ChVector<>(0, 0, 0));
 			}
 		}
 	}
 }
 
 
-void create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double height, double r_bead, double mass) {
-	// Create a shared material for the particles
-	auto pmat = std::make_shared<ChMaterialSurfaceSMC>();
-
-	pmat->SetSfriction(0.4f);
-	pmat->SetKfriction(0.4f);
-	pmat->SetRollingFriction(0.0f);
-	pmat->SetSpinningFriction(0.0f);
-	pmat->SetRestitution(0.6f);
-	pmat->SetAdhesion(0.0f);
-	pmat->SetAdhesionMultDMT(0.0f);
-	pmat->SetAdhesionSPerko(0.0f);
+void create_cylinder_int(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_int, double height, double r_bead, double mass) {
 
 	// Define the shared wall properties
 	int id = msystem->Get_bodylist().at(msystem->Get_bodylist().size() - 1)->GetIdentifier() - 1;
@@ -192,7 +166,7 @@ void create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double 
 	cylinder->SetMass(mass); // FIX ME
 	cylinder->SetPos(posc);
 	cylinder->SetRot(rot);
-	cylinder->SetMaterialSurface(pmat); // FIX ME
+	cylinder->SetMaterialSurface(mat); // FIX ME
 	cylinder->SetBodyFixed(true);
 	cylinder->SetCollide(true);
 
@@ -221,7 +195,8 @@ void create_cylinder_int(ChSystemParallelSMC* msystem, double r_cyl_int, double 
 }
 
 
-std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass) {
+std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass) {
+
 	// Get start index of the wall list
 	std::pair<size_t, size_t> wrange;
 	wrange.first = msystem->Get_bodylist().size();
@@ -245,8 +220,8 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, double r_cyl_int,
 	auto ceiling = AddPovRayWall(--id, msystem, wmat, box_size, 10.0, cpos, rot, true);
 
 	// Add the inner and outer cylinders
-	create_cylinder_int(msystem, r_cyl_int, height, r_bead, mass);
-	create_cylinder_ext(msystem, r_cyl_ext, height, r_bead, mass);
+	create_cylinder_int(msystem, mat, r_cyl_int, height, r_bead, mass);
+	create_cylinder_ext(msystem, mat, r_cyl_ext, height, r_bead, mass);
 
 	// Find and return index range of wall list 
 	wrange.second = msystem->Get_bodylist().size() - 1;
@@ -271,7 +246,6 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 }
 
 
-// Set simulation settings and collision detection parameters
 void SetSimParameters(ChSystemParallelSMC* msystem, ChVector<> gravity, double r_bead) {
 	// Set CalcContactForce properties
 	msystem->Set_G_acc(gravity);
@@ -311,11 +285,23 @@ int main(int argc, char* argv[]) {
 
 	GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
+	// Create a shared material for the particles
+	float y_modulus = 2.0e5;				
+	float p_ratio = 0.3f;					
+	float s_frict = 0.4f;					
+	float k_frict = 0.4f;					
+	float roll_frict = 0.0f;				
+	float spin_frict = 0.0f;			    
+	float cor = 0.6f;				
+	float ad = 0.0f;						
+
+	auto pmat = AddMaterialProperties(y_modulus, p_ratio, s_frict, k_frict, roll_frict, spin_frict, cor, ad);
+
 	//Déclaration des paramètres
 	double gy = -9.81E2;
 	double r_bead = 0.2;
-	double r_cyl_ext = 8;
-	double r_cyl_int = 3;
+	double r_cyl_ext = 12;
+	double r_cyl_int = 7;
 	double height = 5;
 	double height_bead = 4;
 	double rho = 2.55;
@@ -336,14 +322,14 @@ int main(int argc, char* argv[]) {
 
 	double time_step = 1.0E-4;
 	double out_step = 2.0E-2;
-	double time_sim = 3.0;
+	double time_sim = 4.0;
 
 	ChSystemParallelSMC msystem;
 	SetSimParameters(&msystem, gravity, r_bead);
 
 	// Add the shear-cell structure and fill the cell with particles according to tc_set inputs
-	std::pair<size_t, size_t> wlist = set_up(&msystem, r_cyl_int, r_cyl_ext, height, r_bead, mass);
-	std::pair<size_t, size_t> plist = remplir(&msystem, r_cyl_int, r_cyl_ext, height_bead, r_bead, mass);
+	std::pair<size_t, size_t> wlist = set_up(&msystem, pmat, r_cyl_int, r_cyl_ext, height, r_bead, mass);
+	std::pair<size_t, size_t> plist = remplir(&msystem, pmat, r_cyl_int, r_cyl_ext, height_bead, r_bead, mass);
 
 	size_t start_wlist = wlist.first;
 	size_t num_walls = wlist.second - start_wlist + 1;
@@ -421,7 +407,7 @@ int main(int argc, char* argv[]) {
 		v_avg = v_avg / num_particles;
 
 		mean_v << time << " " << v_avg << "\n";
-		fprintf(stderr, "time : %f \tmean_v : %f\n", time, v_avg);
+		// fprintf(stderr, "time : %f \tmean_v : %f\n", time, v_avg);
 		pov_exporter.ExportData();
 
 		if (v_avg < 0.001) break;
@@ -442,8 +428,6 @@ int main(int argc, char* argv[]) {
 		position << -100000000 << " " << -100000000 << " " << -100000000 << -100000000 << "\n";
 		position.close();
 	}
-
-	fprintf(stderr, "Les positions ont bien ete enregistrees\n");
 
 	// Delete dynamically allocated objects and arrays and return
 	#ifdef CHRONO_IRRLICHT
