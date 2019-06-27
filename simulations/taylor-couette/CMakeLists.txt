@@ -13,7 +13,8 @@ cmake_minimum_required(VERSION 2.8)
 
 SET(TESTS
   test_tc_set
-  test_tc_run  
+  test_tc_run
+  test_tc_rmg  
   )
 
 #--------------------------------------------------------------

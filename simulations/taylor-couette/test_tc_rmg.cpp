@@ -76,7 +76,7 @@ using namespace chrono::postprocess;
 #endif
 
 
-void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat,
+void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
 	bool isWall, bool isFixed, double rad, double mass, ChVector<> pos, ChVector<> init_v, ChVector<> init_w) {
 	// Get start index of wall list
 	std::pair<size_t, size_t> prange;
@@ -87,7 +87,7 @@ void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurface
 	else if (!isWall && id < 0) id = 0;
 	else ++id;
 
-	// Create particle
+	// Create particle	
 	auto ball = AddMovingSphere(id, msystem, mat, rad, mass, pos, init_v, init_w);
 	if (isFixed == true) ball->SetBodyFixed(true);
 
@@ -104,7 +104,7 @@ void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurface
 }
 
 
-std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat,
+std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
 	double mass, const std::string set_path) {
 	// Get start index of particle list
 	std::pair<size_t, size_t> prange;
@@ -133,14 +133,14 @@ std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<
 }
 
 
-void create_cylinder_ext(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat,
-	double r_cyl_ext, double height, double r_bead, double mass, int methode) {
-	for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
+void create_cylinder_ext(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
+	double r_cyl_ext, double height, double r_bead, double mass) {
+	for (int j = 0; j < floor(height / (sqrt(3) * r_bead)); j = j + 2) {
 		for (int i = 0; i < floor((CH_C_PI * (r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
 			ChVector<> pos = ChVector<>((r_cyl_ext - r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * j + r_bead, (r_cyl_ext - r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))));
 			create_bead(msystem, mat, true, true, r_bead, mass, pos, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
 				
-			if (j + 1 < floor(height / (2 * r_bead))) {
+			if (j + 1 < floor(height / (sqrt(3) * r_bead))) {
 				ChVector<> pos2 = ChVector<>((r_cyl_ext - r_bead) * cos((2 * i + 1)*(atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_ext - r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_ext - r_bead)))));
 				create_bead(msystem, mat, true, true, r_bead, mass, pos2, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
 			}
@@ -149,7 +149,7 @@ void create_cylinder_ext(ChSystemParallelSMC* msystem, std::shared_ptr<ChMateria
 }
 
 
-std::shared_ptr<ChBody> create_cylinder_int(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat,
+std::shared_ptr<ChBody> create_cylinder_int(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
 	double r_cyl_int, double height, double r_bead, double mass) {
 	// Define the shared wall properties
 	int id = msystem->Get_bodylist().at(msystem->Get_bodylist().size() - 1)->GetIdentifier() - 1;
@@ -163,18 +163,18 @@ std::shared_ptr<ChBody> create_cylinder_int(ChSystemParallelSMC* msystem, std::s
 	cylinder->SetMass(mass); // FIX ME
 	cylinder->SetPos(posc);
 	cylinder->SetRot(rot);
-	cylinder->SetMaterialSurface(mat);
+	cylinder->SetMaterialSurface(mat); 
 	cylinder->SetBodyFixed(false);
 	cylinder->SetCollide(true);
 
 	cylinder->GetCollisionModel()->ClearModel();
 	utils::AddCylinderGeometry(cylinder.get(), r_cyl_int, height / 2, ChVector<>(0, 0, 0), rot, true);
-	for (int j = 0; j < floor(height / (2 * r_bead)); j = j + 2) {
+	for (int j = 0; j < floor(height / (sqrt(3) * r_bead)); j = j + 2) {
 		for (int i = 0; i < floor( CH_C_PI * (r_cyl_int + r_bead) / r_bead) + 1; i++) {
 			ChVector<> pos = ChVector<>((r_cyl_int + r_bead)*cos(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3)*r_bead * j+r_bead, (r_cyl_int + r_bead)*sin(i*(2 * atan(r_bead / (r_cyl_int + r_bead)))));
 			utils::AddSphereGeometry(cylinder.get(), r_bead, pos - posc + poso, rot, false);
 
-			if (j + 1 < floor(height / (2 * r_bead))) {
+			if (j + 1 < floor(height / (sqrt(3) * r_bead))) {
 				ChVector<> pos2 = ChVector<>((r_cyl_int + r_bead) * cos((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))), sqrt(3) * r_bead * (j + 1) + r_bead, (r_cyl_int + r_bead) * sin((2 * i + 1) * (atan(r_bead / (r_cyl_int + r_bead)))));
 				utils::AddSphereGeometry(cylinder.get(), r_bead, pos2 - posc + poso, rot, false);
 			}
@@ -187,16 +187,14 @@ std::shared_ptr<ChBody> create_cylinder_int(ChSystemParallelSMC* msystem, std::s
 	mvisual->SetColor(ChColor(0.48f, 0.71f, 0.38f));
 	cylinder->AddAsset(mvisual);
 
-	// AddPattern(cylinder, "bluwhite.png");
-
 	// Add the interior wall to the system and return
 	msystem->AddBody(cylinder);
 	return cylinder;
 }
 
 
-std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat,
-	double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass, double rotation_speed) {
+std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
+	double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass) {
 	// Get start index of the wall list
 	std::pair<size_t, size_t> wrange;
 	wrange.first = msystem->Get_bodylist().size();
@@ -211,25 +209,17 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, std::shared_ptr<C
 	wmat->SetFriction(0.4f);
 	wmat->SetAdhesion(0);
 
-	//Création du sol
-	ChVector<> fb_size = ChVector<>(r_cyl_ext, 0.1, r_cyl_ext);
-	ChVector<> fb_pos = ChVector<>(ChVector<>(0, - fb_size.y(), 0));
-		
-	auto fixedBody = AddPovRayWall(--id, msystem, wmat, fb_size, 10.0, fb_pos, rot, true);
-	
-	// Add a rotating inner cylinder covered with beads
-	auto rotatingBody = create_cylinder_int(msystem, mat, r_cyl_int, height, r_bead, mass);
+	//Création du sol and inner cylinder
+	ChVector<> box_size = ChVector<>(r_cyl_ext, 0.1, r_cyl_ext);
+	ChVector<> fpos = ChVector<>(0, -box_size.y(), 0);
+	ChVector<> cpos = ChVector<>(0, height, 0);
 
-	auto motor = std::make_shared<ChLinkMotorRotationSpeed>();
-	motor->Initialize(rotatingBody, fixedBody, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngAxis(CH_C_PI_2, VECT_X)));
-	msystem->Add(motor);
+	auto floor = AddPovRayWall(--id, msystem, wmat, box_size, 10.0, fpos, rot, true);
+	auto ceiling = AddPovRayWall(--id, msystem, wmat, box_size, 10.0, cpos, rot, false);
+	auto inner_wall = create_cylinder_int(msystem, mat, r_cyl_int, height, r_bead, mass);
 
-	auto mfun = std::make_shared<ChFunction_Const>(rotation_speed);  // speed w=90°/s CH_C_PI / 2.0
-	motor->SetSpeedFunction(mfun);
-	motor->SetAvoidAngleDrift(0);
-
-	// Add the particles forming the outer cylyinder wall
-	create_cylinder_ext(msystem, mat, r_cyl_ext, height, r_bead, mass, 3);
+	// Add the particles forming the outer cylinder wall
+	create_cylinder_ext(msystem, mat, r_cyl_ext, height, r_bead, mass);
 
 	// Find and return index range of wall list 
 	wrange.second = msystem->Get_bodylist().size() - 1;
@@ -251,6 +241,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 	// Tell to the POVray exporter to convert the shapes of all items
 	pov_exporter->AddAll();
 	pov_exporter->ExportScript();
+	pov_exporter->ExportData();
 }
 
 
@@ -283,7 +274,7 @@ void SetSimParameters(ChSystemParallelSMC* msystem, ChVector<> gravity, double r
 int main(int argc, char* argv[]) {
 	// Set the output data directory. dontcare = false when a timestamped directory is desired
 	bool dontcare = false;
-	std::string projname = "_tc_run"; 
+	std::string projname = "_tc_rmg"; 
 
 	const std::string out_dir = SetDataPath(projname, dontcare);
 
@@ -313,19 +304,30 @@ int main(int argc, char* argv[]) {
 	double gy, r_bead, r_cyl_ext, r_cyl_int, height, height_bead, mass;
 	fichier >> gy >> r_bead >> r_cyl_ext >> r_cyl_int >> height >> height_bead >> mass;
 
+	//Change gravity and rewrite the settings into the file : settings.dat
+	gy = (1 / 80000) * gy;
+
+	std::string param_file = out_dir + "/settings.dat";
+	ChStreamOutAsciiFile settings(param_file.c_str());
+	settings << gy << " " << r_bead << " " << r_cyl_ext << " " << r_cyl_int << " " << height << " " << height_bead << " " << mass << " " << "\n";
+
+	// Create a .dat file with three columns of demo data:
+	std::string meanv_file = out_dir + "/mean_v_data.dat";
+	ChStreamOutAsciiFile mean_v(meanv_file.c_str());
+	mean_v << "time" << " " << "mean_v" << "\n";
+
 	// Create a parallel SMC system and set the system parameters
 	ChVector<> gravity(0, gy, 0);
 
 	double time_step = 1.0E-4;
 	double out_step = 2.0E-2;
-	double time_sim = 10.0;
+	double time_sim = 2.0;
 
 	ChSystemParallelSMC msystem;
 	SetSimParameters(&msystem, gravity, r_bead);
 	
 	// Add the shear-cell structure and fill the cell with particles according to tc_set inputs
-	double rotation_speed = 0.096;
-	std::pair<size_t, size_t> wlist = set_up(&msystem, pmat, r_cyl_int, r_cyl_ext, height, r_bead, mass, rotation_speed);
+	std::pair<size_t, size_t> wlist = set_up(&msystem, pmat, r_cyl_int, r_cyl_ext, height, r_bead, mass);
 	std::pair<size_t, size_t> plist = remplir(&msystem, pmat, mass, set_path);
 
 	size_t start_wlist = wlist.first;
@@ -359,21 +361,11 @@ int main(int argc, char* argv[]) {
 		auto application = SetSimVis(&msystem, time_step, vis, 20.0);
 	#endif
 	
-	// create a .dat file with three columns of demo data:
-	std::string vel_file = out_dir + "/velocity_profile.dat";
-	ChStreamOutAsciiFile velocity_profile(vel_file.c_str());
-
-	std::string full_file = out_dir + "/all_data_surface.dat";
-	ChStreamOutAsciiFile all_data_surface(full_file.c_str());
-	
-	velocity_profile << "0" << " " << "0" << " " << "id_frame" << " " << "id_part" << " " << "v_r" << " " << "v_t" << " " << "r" << "\n";
-	all_data_surface << "time" << " " << "id" << " " << "x" << " " << "y" << " " << "z" << " " << "v_x" << " " << "v_y" << " " << "v_z" << " " << "\n";
-
 	// THE SOFT-REAL-TIME CYCLE
 	double time = 0.0;
 	double out_time = 0.0;
-	int frame = 0;
 
+	double v_avg;
 	double timer_sim = 0.0;
 	double timer_bcollision = 0.0;
 	double timer_ncollision = 0.0;
@@ -405,29 +397,24 @@ int main(int argc, char* argv[]) {
 			}
 		#endif
 		
-		for (int j = start_plist; j < start_plist + num_particles; ++j) {
-			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(j);
-
-			int id = body->GetIdentifier();
-			double v_x = body->GetPos_dt().x();
-			double v_y = body->GetPos_dt().y();
-			double v_z = body->GetPos_dt().z();
-			double x = body->GetPos().x();
-			double y = body->GetPos().y();
-			double z = body->GetPos().z();
-			double theta = atan2(z, x);
-			double r = sqrt(x*x +z*z);
-			double v_r = v_x * cos(theta) + v_z * sin(theta);
-			double v_t = v_z * cos(theta) - v_x * sin(theta);
-			
-			velocity_profile << 0 << " " << 0 << " " << frame << " " << id << " " << v_r << " " << v_t << " " << r << "\n";
-			all_data_surface << time << " " << id << " " << x << " " << y << " " << z << " " << v_x << " " << v_y << " " << v_z << " " << "\n";
+		v_avg = 0;
+		for (int i = start_plist; i < start_plist + num_particles; ++i) {
+			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(i);
+			double v_mag = body->GetPos_dt().Length();
+			v_avg += v_mag;
 		}
+		v_avg = v_avg / num_particles;
 
-		pov_exporter.ExportData();
-		frame = frame + 1;
+		mean_v << time << " " << v_avg << "\n";
+		fprintf(stderr, "time : %f \tmean_v : %f\n", time, v_avg);
+		// pov_exporter.ExportData();
+
+		if (v_avg < 1.0E-4) break;
 		out_time = time - time_step + out_step;
 	}
+
+	// Eport only the initial and final state povray frames
+	pov_exporter.ExportData();
 
 	// Save the final particle state data
 	std::string fstate_file = out_dir + "/position.dat";
@@ -437,21 +424,21 @@ int main(int argc, char* argv[]) {
 		for (int i = start_plist; i < start_plist + num_particles; ++i) {
 			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(i);
 			position << body->GetIdentifier() << " "
-					 << body->GetCollisionModel()->GetEnvelope() << " "
-					 << body->GetPos().x() << " "
-					 << body->GetPos().y() << " " 
-					 << body->GetPos().z() << " "
-					 << body->GetPos_dt().x() << " "
-					 << body->GetPos_dt().y() << " "
-					 << body->GetPos_dt().z() << " "
-					 << body->GetWvel_loc().x() << " "
-					 << body->GetWvel_loc().y() << " "
-					 << body->GetWvel_loc().z() << "\n";
+				<< body->GetCollisionModel()->GetEnvelope() << " "
+				<< body->GetPos().x() << " "
+				<< body->GetPos().y() << " "
+				<< body->GetPos().z() << " "
+				<< body->GetPos_dt().x() << " "
+				<< body->GetPos_dt().y() << " "
+				<< body->GetPos_dt().z() << " "
+				<< body->GetWvel_loc().x() << " "
+				<< body->GetWvel_loc().y() << " "
+				<< body->GetWvel_loc().z() << "\n";
 		}
 		position.close();
 	}
 
-		// Delete dynamically allocated objects and arrays and return
+	// Delete dynamically allocated objects and arrays and return
 	#ifdef CHRONO_IRRLICHT
 		delete application;
 	#endif
@@ -461,6 +448,7 @@ int main(int argc, char* argv[]) {
 					 << "\n" << "SYS, timer_ncollision, " << timer_ncollision
 					 << "\n" << "SYS, timer_fcalc, " << timer_fcalc
 					 << "\n" << "SYS, timer_sim, " << timer_sim;
+
 
 	return 0;
 }

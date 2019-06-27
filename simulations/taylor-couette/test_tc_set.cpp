@@ -76,7 +76,8 @@ ChIrrApp* SetSimVis(ChSystemParallelSMC* msystem, double time_step, bool vis, do
 #endif
 
 
-void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, bool isWall, bool isFixed, double rad, double mass, ChVector<> pos, ChVector<> init_v) {
+void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
+	bool isWall, bool isFixed, double rad, double mass, ChVector<> pos, ChVector<> init_v) {
 	// Get start index and identifier of wall list
 	std::pair<size_t, size_t> prange;
 	prange.first = msystem->Get_bodylist().size();
@@ -103,7 +104,8 @@ void create_bead(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurface
 }
 
 
-std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_int, double r_cyl_ext, double height_bead, double r_bead, double mass) {
+std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
+	double r_cyl_int, double r_cyl_ext, double height_bead, double r_bead, double mass) {
 	// Get start index of particle list
 	std::pair<size_t, size_t> prange;
 	prange.first = msystem->Get_bodylist().size();
@@ -137,7 +139,8 @@ std::pair<size_t, size_t> remplir(ChSystemParallelSMC* msystem, std::shared_ptr<
 }
 
 
-void create_cylinder_ext(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_ext, double height, double r_bead, double mass) {
+void create_cylinder_ext(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
+	double r_cyl_ext, double height, double r_bead, double mass) {
 	for (int j = 0; j < floor(height / (sqrt(3) * r_bead)); j = j + 2) {
 		for (int i = 0; i < floor((CH_C_PI * (r_cyl_ext - r_bead)) / r_bead) + 1; i++) {
 			ChVector<> pos = ChVector<>((r_cyl_ext - r_bead) * cos(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))), sqrt(3) * r_bead * j + r_bead, (r_cyl_ext - r_bead) * sin(i * (2 * atan(r_bead / (r_cyl_ext - r_bead)))));
@@ -152,8 +155,8 @@ void create_cylinder_ext(ChSystemParallelSMC* msystem, std::shared_ptr<ChMateria
 }
 
 
-void create_cylinder_int(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_int, double height, double r_bead, double mass) {
-
+void create_cylinder_int(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
+	double r_cyl_int, double height, double r_bead, double mass) {
 	// Define the shared wall properties
 	int id = msystem->Get_bodylist().at(msystem->Get_bodylist().size() - 1)->GetIdentifier() - 1;
 	ChQuaternion<> rot = ChQuaternion<>(1, 0, 0, 0);
@@ -166,7 +169,7 @@ void create_cylinder_int(ChSystemParallelSMC* msystem, std::shared_ptr<ChMateria
 	cylinder->SetMass(mass); // FIX ME
 	cylinder->SetPos(posc);
 	cylinder->SetRot(rot);
-	cylinder->SetMaterialSurface(mat); // FIX ME
+	cylinder->SetMaterialSurface(mat);
 	cylinder->SetBodyFixed(true);
 	cylinder->SetCollide(true);
 
@@ -195,8 +198,8 @@ void create_cylinder_int(ChSystemParallelSMC* msystem, std::shared_ptr<ChMateria
 }
 
 
-std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass) {
-
+std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, std::shared_ptr<ChMaterialSurfaceSMC> mat, 
+	double r_cyl_int, double r_cyl_ext, double height, double r_bead, double mass) {
 	// Get start index of the wall list
 	std::pair<size_t, size_t> wrange;
 	wrange.first = msystem->Get_bodylist().size();
@@ -217,7 +220,7 @@ std::pair<size_t, size_t> set_up(ChSystemParallelSMC* msystem, std::shared_ptr<C
 	ChVector<> cpos = ChVector<>(0, height, 0);
 
 	auto floor = AddPovRayWall(--id, msystem, wmat, box_size, 10.0, fpos, rot, true);
-	auto ceiling = AddPovRayWall(--id, msystem, wmat, box_size, 10.0, cpos, rot, true);
+	auto ceiling = AddPovRayWall(--id, msystem, wmat, box_size, 10.0, cpos, rot, false);
 
 	// Add the inner and outer cylinders
 	create_cylinder_int(msystem, mat, r_cyl_int, height, r_bead, mass);
@@ -243,6 +246,7 @@ void SetPovrayParameters(ChPovRay* pov_exporter, double x_cam, double y_cam, dou
 	// Tell to the POVray exporter to convert the shapes of all items
 	pov_exporter->AddAll();
 	pov_exporter->ExportScript();
+	pov_exporter->ExportData();
 }
 
 
@@ -300,21 +304,21 @@ int main(int argc, char* argv[]) {
 	//Déclaration des paramètres
 	double gy = -9.81E2;
 	double r_bead = 0.2;
-	double r_cyl_ext = 12;
-	double r_cyl_int = 7;
+	double r_cyl_ext = 10;
+	double r_cyl_int = 5;
 	double height = 5;
 	double height_bead = 4;
 	double rho = 2.55;
 	double mass = rho * (4 / 3)*CH_C_PI*pow(r_bead, 3);
 
-	//Writes the settings into the file : settings.dat
-	std::string datafile3 = out_dir + "/settings.dat";
-	ChStreamOutAsciiFile settings(datafile3.c_str());
+	//Write the initial cinfiguration to the file settings.dat
+	std::string param_file = out_dir + "/settings.dat";
+	ChStreamOutAsciiFile settings(param_file.c_str());
 	settings << gy << " " << r_bead << " " << r_cyl_ext << " " << r_cyl_int << " " << height << " " << height_bead << " " << mass << " " << "\n";
 
 	// Create a .dat file with three columns of demo data:
-	std::string datafile = out_dir + "/mean_v_data.dat";
-	ChStreamOutAsciiFile mean_v(datafile.c_str());
+	std::string meanv_file = out_dir + "/mean_v_data.dat";
+	ChStreamOutAsciiFile mean_v(meanv_file.c_str());
 	mean_v << "time" << " " << "mean_v" << "\n";
 
 	// Create a parallel SMC system and set the system parameters
@@ -345,7 +349,7 @@ int main(int argc, char* argv[]) {
 			 << "\n" << "SYS, num_particles, " << (double)num_particles
 			 << "\n" << "SYS, buffer_size, " << BUFFER_SIZE
 			 << "\n" << "SYS, data_array_size, " << num_particles * BUFFER_SIZE * sizeof(ParticleData);
-
+	
 	PrintSimParameters(&msystem);
 
 	// Create an exporter to POVray and set all associated filepaths and settings
@@ -408,24 +412,34 @@ int main(int argc, char* argv[]) {
 
 		mean_v << time << " " << v_avg << "\n";
 		// fprintf(stderr, "time : %f \tmean_v : %f\n", time, v_avg);
-		pov_exporter.ExportData();
+		// pov_exporter.ExportData();
 
-		if (v_avg < 0.001) break;
+		if (v_avg < 5.0E-4) break;
 		out_time = time - time_step + out_step;
 	}
+	
+	// Eport only the initial and final state povray frames
+	pov_exporter.ExportData();
 
-	fprintf(stderr, "time : %f \tmean_v : %f\n", time, v_avg);
-
-	std::string datafile2 = out_dir + "/position.dat";
-	std::ofstream position(datafile2, std::ios::out | std::ios::trunc);
+	// Write final state information to a file
+	std::string fstate_file = out_dir + "/position.dat";
+	std::ofstream position(fstate_file, std::ios::out | std::ios::trunc);
 
 	if (position) {
 		for (int i = start_plist; i < start_plist + num_particles; ++i) {
 			std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(i);
-			position << body->GetPos().x() << " " << body->GetPos().y() << " " << body->GetPos().z() << " " << body->GetCollisionModel()->GetEnvelope() << "\n";
+			position << body->GetIdentifier() << " "
+				<< body->GetCollisionModel()->GetEnvelope() << " "
+				<< body->GetPos().x() << " "
+				<< body->GetPos().y() << " "
+				<< body->GetPos().z() << " "
+				<< body->GetPos_dt().x() << " "
+				<< body->GetPos_dt().y() << " "
+				<< body->GetPos_dt().z() << " "
+				<< body->GetWvel_loc().x() << " "
+				<< body->GetWvel_loc().y() << " "
+				<< body->GetWvel_loc().z() << "\n";
 		}
-
-		position << -100000000 << " " << -100000000 << " " << -100000000 << -100000000 << "\n";
 		position.close();
 	}
 
