@@ -1,7 +1,7 @@
 clear,clc
 %--------------------------------------------------------------------------
 %STEP 1: LOAD MATLAB ENVIRONMENT
-
+%%
 addpath('matlab/Main');
 addpath('matlab/PTV_algorithm');
 addpath('matlab/PTV_algorithm/1-acquisition');
@@ -33,8 +33,8 @@ data_perspective = [fdivZ p_s];
 %directory = fullfile('data/videos');
 %videoname = 'Test_jaune_plafond_paslumieres.mp4';
 %acquisition(fullfile(directory, videoname));
-set = imageSet(fullfile('matlab/data/nouveau_format/angular_velocity/65Hz'));
-%set = imageSet(fullfile('matlab/data/experiences/Regime_transitoire/Profil_de_vitesse/40Hz'));
+set = imageSet(fullfile('matlab/data/experiences/Vitesse_rotation-Vide/60Hz'));
+%set = imageSet(fullfile('matlab/data/nouveau_format/angular_velocity/65Hz'));
 %--------------------------------------------------------------------------
 %%
 %STEP 4: CREATION OF A MASK (go in parameters.m and set the mask parameters 
@@ -56,14 +56,9 @@ mask(set, data_mask);
 
 %Then test your mask !
 
-array2 = keep_shearing_band(detect_particles(set, 1, data,0), data_mask);
-display_particles(set, 1, data, array2, 1,1);
-%display_rg(set, 1, data, array2,1);
-
-%array_filtered = filter_size_bright(array2, 10000, 'brightness');
-%array_filtered = filter_size_bright(array_filtered, 50, 'radius');
-%display_rg(set, 1, data, array_filtered,1);
-
+array2 = keep_shearing_band(detect_particles(set, 1, data,1), data_mask);
+%display_particles(set, 1, data, array2, 1,1);
+%display_rg(set, 250, data, array2,1);
 %test_sub_pixel_accuracy(array2, 20);
 %%
 %--------------------------------------------------------------------------
@@ -87,18 +82,20 @@ display_data_tracking(set, data_tracking);
 %%
 %TO DISPLAY ONLY ONE PARTICULAR COMPUTED TRACK:
 %deltaT = 1;
-%display_track_nb(set, tr, deltaT, 918);
-
+display_track_nb(set, tr, deltaT, 100);
+%%
 %TO DISPLAY ALL THE COMPUTED TRACKS AT THE SAME TIME:
-%display_tracks(set, tr2, deltaT);
+deltaT = 1;
+display_tracks(set, tr2, deltaT);
 %%
 %TO DISPLAY ALL THE COMPUTED TRACKS ONE AFTER THE OTHER:
-%sz = size(tr2);
-%for i=1:tr2(sz(1,1),4)
-%    display_track_nb(set, tr2, deltaT, i);
-%end
+sz = size(tr2);
+for i=38:tr2(sz(1,1),4)
+    display_track_nb(set, tr2, deltaT, i);
+end
 
 %clear tr
+%%
 %--------------------------------------------------------------------------
 %STEP 7: CLEAR THE WORKSPACE PLEASE TWROW THE USELESS DATA/VARIABLES
 
@@ -109,6 +106,6 @@ clear data blob_diam th sz sz2 brightn_tr
 clear data2 deltaT maxdisp mem good quiet
 clear data_perspective fdivZ p_s
 clear directory videoname 
-clear sz i
+clear sz i array2
 clear brightness_threshold radius_threshold thresholds
 %--------------------------------------------------------------------------

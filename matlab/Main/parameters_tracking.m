@@ -2,12 +2,12 @@
 %PARAMETERS FOR BUILDING THE MASK(S)
 
 %x0 = x-center of the ellipses 
-x0 = 1120;%1000;
+x0 = 1000;%1000;
 x02 = 0;
 x03 = 0;
 
 %y0 = y-Center of the ellipses 
-y0 = 310; %290; 
+y0 = 290; %290; 
 y02 = 0;
 y03 = 0; 
 
@@ -17,7 +17,7 @@ e2 = 0;
 e3 = 0; 
 
 %a = semi-major axis of the intern ellipse 
-a = 565;%485;
+a = 485;%485;
 a2 = 0;
 a3 = 0;
  
@@ -35,7 +35,7 @@ width3 = 0;
 %th
 %This parameter is used in the pkfnd function; see "detect_particles".
 %The minimum brightness of a pixel that might be local maxima. 
-%(NOTE: Make it big and the code runs faste but you might miss some 
+%(NOTE: Make it big and the code runs fast but you might miss some 
 %particles. Make it small and you'll get everything and it'll be slow)
 
 %sz
@@ -87,12 +87,17 @@ width3 = 0;
 % brightn_tr = 300;
 
 %Laser parameters %50Hz
-blob_diam = 4;   
+% blob_diam = 4;   
+% th = 0;
+% sz = blob_diam; 
+% sz2 = blob_diam + 3;
+% brightn_tr = 400;
+
+blob_diam = 18;   
 th = 15;
 sz = blob_diam; 
 sz2 = blob_diam + 3;
-brightn_tr = 400;
-
+brightn_tr = 300;
 %--------------------------------------------------------------------------
 %PARAMETERS USED FOR THE TRACKING
 
